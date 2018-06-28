@@ -45,7 +45,7 @@ class TimerViewModel(private val secondsToCountdown: Long): ViewModel(){
             if(pause){
                 pause()
             } else {
-               resume()
+               start()
             }
         }
     }
