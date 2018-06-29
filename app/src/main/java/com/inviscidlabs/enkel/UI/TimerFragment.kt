@@ -26,6 +26,8 @@ class TimerFragment: Fragment(){
         if(arguments?.containsKey(ARG_TIME)==null){
             throw RuntimeException(this::class.java.simpleName + " must be created " +
                     "using the newInstance constructor with a valid Long > 0")
+        } else {
+            timerTime = arguments!!.getLong(ARG_TIME)
         }
     }
 
@@ -37,11 +39,16 @@ class TimerFragment: Fragment(){
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        val viewModel = ViewModelProviders.of(this, viewModelFactoryFromArguments())
+        val factory = TimerViewModel.Factory(timerTime)
+        val viewModel = ViewModelProviders.of(this, factory)
                 .get(TimerViewModel::class.java)
 
-        setupPlayButton(viewModel)
         observeViewModel(viewModel)
+        setupPlayButton(viewModel)
+        setupResetButton(viewModel)
+
+
+        //TODO if savedInstanceState, align with ViewModel
     }
 
     override fun onDetach() {
@@ -52,16 +59,16 @@ class TimerFragment: Fragment(){
 
 //region Top Layer Functions
 
-    private fun viewModelFactoryFromArguments(): TimerViewModel.Factory{
-        //the arguments must exist, otherwise, will throw exception onAttach
-        val countdownTime = arguments!!.getLong(ARG_TIME)
-        return TimerViewModel.Factory(countdownTime)
-    }
-
     private fun setupPlayButton(viewModel: TimerViewModel){
         button_playpause.setOnClickListener {
             val isPaused = viewModel.isPaused.value ?: true
             viewModel.setPauseStatus(!isPaused)
+        }
+    }
+
+    private fun setupResetButton(viewModel: TimerViewModel){
+        button_reset.setOnClickListener {
+            viewModel.resetTimer()
         }
     }
 
@@ -74,8 +81,9 @@ class TimerFragment: Fragment(){
 //region 2nd Layer Functions
 
     private fun observeTimeElapsed(viewModel: TimerViewModel){
-        viewModel.timeElapsed.observe(this, Observer{
-            time_text.setText(it!!.toString())
+        viewModel.timeElapsed.observe(this, Observer{timeElapsed->
+            time_text.setText(timeElapsed!!.toString())
+            setProgress(timeElapsed)
         })
     }
 
@@ -95,11 +103,14 @@ class TimerFragment: Fragment(){
 
     }
 
+    private fun setProgress(timeElapsed: Long) {
+        if (timerTime > 0 && timeElapsed <= timerTime) {
+            progressBar.progress = (timeElapsed / timerTime).toInt()
+        }
+    }
+
 
 //endregion
-
-
-
 
 
         companion object {

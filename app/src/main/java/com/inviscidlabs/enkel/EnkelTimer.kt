@@ -29,6 +29,13 @@ abstract class EnkelTimer(private val millisInFuture: Long, private val countdow
         timer?.cancel()
     }
 
+    //reset to initial time and broadcast new time without starting timer
+    fun reset(){
+        timer?.cancel()
+        timeLeftInMillis = millisInFuture
+        onTick(timeLeftInMillis)
+    }
+
 
     abstract fun onFinish()
     abstract fun onTick(millisUntilFinished: Long)

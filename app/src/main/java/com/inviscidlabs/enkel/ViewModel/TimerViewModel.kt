@@ -50,6 +50,11 @@ class TimerViewModel(private val secondsToCountdown: Long): ViewModel(){
         }
     }
 
+    fun resetTimer(){
+        timer.reset()
+        setPauseStatus(true)
+    }
+
     class Factory(private val totalTimeToCountdownInSeconds: Long): ViewModelProvider.Factory{
         override fun <T : ViewModel?> create(modelClass: Class<T>): T
             = TimerViewModel(totalTimeToCountdownInSeconds) as T
