@@ -46,8 +46,6 @@ class TimerFragment: Fragment(){
         observeViewModel(viewModel)
         setupPlayButton(viewModel)
         setupResetButton(viewModel)
-
-
         //TODO if savedInstanceState, align with ViewModel
     }
 
@@ -72,10 +70,13 @@ class TimerFragment: Fragment(){
         }
     }
 
+
     private fun observeViewModel(viewModel: TimerViewModel) {
         observeTimeElapsed(viewModel)
         observePauseStatus(viewModel)
     }
+
+
 //endregion
 
 //region 2nd Layer Functions
@@ -105,13 +106,13 @@ class TimerFragment: Fragment(){
 
     private fun setProgress(timeElapsed: Long) {
         if (timerTime > 0 && timeElapsed <= timerTime) {
-            progressBar.progress = (timeElapsed / timerTime).toInt()
+            progressBar.progress = ((timeElapsed / timerTime*100).toInt())
+            progressBar.max = timerTime.toInt()
+            progressBar.progress = ((timeElapsed / timerTime*100).toInt())
+
         }
     }
-
-
 //endregion
-
 
         companion object {
         @JvmStatic
@@ -121,6 +122,5 @@ class TimerFragment: Fragment(){
             }
         }
     }
-
 
 }

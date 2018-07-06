@@ -40,7 +40,6 @@ class TimerViewModel(private val secondsToCountdown: Long): ViewModel(){
 
     fun setPauseStatus(pause: Boolean){
         _isPaused.value = pause
-
         with(timer){
             if(pause){
                 pause()
@@ -59,6 +58,5 @@ class TimerViewModel(private val secondsToCountdown: Long): ViewModel(){
         override fun <T : ViewModel?> create(modelClass: Class<T>): T
             = TimerViewModel(totalTimeToCountdownInSeconds) as T
     }
-
 
 }
