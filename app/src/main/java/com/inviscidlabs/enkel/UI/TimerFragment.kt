@@ -21,6 +21,7 @@ class TimerFragment: Fragment(){
 
     private var timerTime = 0L
     private lateinit var mContext: Context
+    private var fragmentInterface: OnTimerFragmentResult? = null
 
 //region Lifecycle functions
 
@@ -31,6 +32,12 @@ class TimerFragment: Fragment(){
                     "using the newInstance constructor with a valid Long > 0")
         } else {
             timerTime = arguments!!.getLong(ARG_TIME)
+        }
+
+        if(context is OnTimerFragmentResult){
+            fragmentInterface = context
+        } else {
+            throw RuntimeException("${context.toString()} must implement OnTimerFragmentResult")
         }
     }
 
@@ -99,6 +106,14 @@ class TimerFragment: Fragment(){
         })
     }
 
+    private fun observeTimeExpired(viewModel: TimerViewModel){
+        viewModel.timeIsExpired.observe(this, Observer {isExpired->
+            if(isExpired!=null && isExpired){
+                fragmentInterface?.timerDone(timerTime)
+            }
+        })
+    }
+
     private fun adjustPlayPauseButton(isPaused: Boolean){
         when(isPaused){
             true -> button_playpause.setImageResource(R.drawable.ic_play_arrow_black_24dp)
@@ -123,6 +138,11 @@ class TimerFragment: Fragment(){
 
 
 //endregion
+
+    interface OnTimerFragmentResult{
+        fun timerDone(totalTime: Long)
+    }
+
         companion object {
         @JvmStatic
         fun newInstance(timeInSeconds: Long) = TimerFragment().apply {
