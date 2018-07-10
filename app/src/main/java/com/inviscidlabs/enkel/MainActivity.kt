@@ -1,5 +1,8 @@
 package com.inviscidlabs.enkel
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.os.Build
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.app.NotificationCompat
@@ -19,6 +22,7 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        createNotificationChannel()
 
         makeTimerFragment(10)
     }
@@ -57,6 +61,20 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult {
 
             NotificationManagerCompat.from(mContext).notify(mNotificationID.incrementAndGet(), mBuilder.build())
 
+    }
+
+    private fun createNotificationChannel(){
+        if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.O){
+            val name = "Enkel"
+            val description = "Timer"
+            val importance = NotificationManager.IMPORTANCE_HIGH
+            val notificationChannel = NotificationChannel(CHANNEL_ID, name, importance)
+            notificationChannel.description = description
+
+            val notificationManager: NotificationManager =
+                    getSystemService(NotificationManager::class.java)
+            notificationManager.createNotificationChannel(notificationChannel)
+        }
     }
 
 }

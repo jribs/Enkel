@@ -13,6 +13,7 @@ import android.view.ViewGroup
 import com.inviscidlabs.enkel.R
 import com.inviscidlabs.enkel.ViewModel.TimerViewModel
 import kotlinx.android.synthetic.main.fragment_timer.*
+import kotlin.math.round
 
 private const val ARG_TIME = "args_timeInMilliseconds"
 
@@ -52,7 +53,7 @@ class TimerFragment: Fragment(){
         val factory = TimerViewModel.Factory(timerTime)
         val viewModel = ViewModelProviders.of(this, factory)
                 .get(TimerViewModel::class.java)
-
+        observeTimeExpired((viewModel))
         observeViewModel(viewModel)
         setupPlayButton(viewModel)
         setupResetButton(viewModel)
@@ -61,7 +62,7 @@ class TimerFragment: Fragment(){
 
     override fun onDetach() {
         super.onDetach()
-
+        fragmentInterface = null
     }
 //endregion
 
@@ -80,7 +81,6 @@ class TimerFragment: Fragment(){
         }
     }
 
-
     private fun observeViewModel(viewModel: TimerViewModel) {
         observeTimeElapsed(viewModel)
         observePauseStatus(viewModel)
@@ -93,7 +93,7 @@ class TimerFragment: Fragment(){
 
     private fun observeTimeElapsed(viewModel: TimerViewModel){
         viewModel.timeElapsed.observe(this, Observer{timeElapsed->
-            time_text.setText(timeElapsed!!.toString())
+            time_text.text = timeElapsed!!.toString()
             setProgress(timeElapsed)
         })
     }
@@ -127,9 +127,9 @@ class TimerFragment: Fragment(){
             progressBar.progress = ((timeElapsed / timerTime*100).toInt())
             progressBar.max = timerTime.toInt()
             progressBar.progress = ((timeElapsed / timerTime*100).toInt())
-
         }
     }
+
 //endregion
 
 
@@ -142,7 +142,6 @@ class TimerFragment: Fragment(){
     interface OnTimerFragmentResult{
         fun timerDone(totalTime: Long)
     }
-
         companion object {
         @JvmStatic
         fun newInstance(timeInSeconds: Long) = TimerFragment().apply {

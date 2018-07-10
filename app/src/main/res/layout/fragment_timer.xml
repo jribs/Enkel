@@ -43,6 +43,7 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <LinearLayout
+        android:id="@+id/container_buttons"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
@@ -61,7 +62,7 @@
             android:adjustViewBounds="true"
             android:background="#80000000"
             android:padding="16dp"
-            android:scaleType="centerInside"
+            android:scaleType="fitCenter"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/progressBar"
@@ -71,7 +72,8 @@
         <View
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="0.5" />
+            android:layout_weight="1" />
+
         <ImageButton
             android:id="@+id/button_playpause"
             android:layout_width="0dp"
@@ -84,7 +86,7 @@
             android:adjustViewBounds="true"
             android:background="#80000000"
             android:padding="16dp"
-            android:scaleType="centerInside"
+            android:scaleType="fitCenter"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/progressBar"
