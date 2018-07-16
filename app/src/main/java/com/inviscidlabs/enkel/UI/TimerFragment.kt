@@ -29,12 +29,14 @@ class TimerFragment: Fragment(){
     lateinit var appContext: Context
     private var timerTime = 0L
     private var fragmentInterface: OnTimerFragmentResult? = null
-    private val wrapper = ContextThemeWrapper(activity, R.style.AppTheme)
+    private lateinit var wrapper:ContextThemeWrapper
 
 //region Lifecycle functions
 
     override fun onAttach(context: Context?) {
-        super.onAttach(context)
+        ((context as EnkelApp).appComponent.injectFragment(this))
+        wrapper = ContextThemeWrapper(appContext, R.style.AppTheme)
+
         if(arguments?.containsKey(ARG_TIME)==null){
             throw RuntimeException(this::class.java.simpleName + " must be created " +
                     "using the newInstance constructor with a valid Long > 0")
@@ -47,6 +49,7 @@ class TimerFragment: Fragment(){
         } else {
             throw RuntimeException("${context.toString()} must implement OnTimerFragmentResult")
         }
+        super.onAttach(context)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
