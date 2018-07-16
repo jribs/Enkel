@@ -60,7 +60,7 @@
             android:layout_marginTop="8dp"
             android:layout_weight="1"
             android:adjustViewBounds="true"
-            android:background="#80000000"
+            android:background="@null"
             android:padding="16dp"
             android:scaleType="fitCenter"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -72,7 +72,7 @@
         <View
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1" />
+            android:layout_weight="1.5" />
 
         <ImageButton
             android:id="@+id/button_playpause"
@@ -84,13 +84,14 @@
             android:layout_marginTop="8dp"
             android:layout_weight="1"
             android:adjustViewBounds="true"
-            android:background="#80000000"
+            android:background="@null"
             android:padding="16dp"
             android:scaleType="fitCenter"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/progressBar"
             app:srcCompat="@drawable/ic_play_arrow_black_24dp" />
-
     </LinearLayout>
+
+
 </android.support.constraint.ConstraintLayout>

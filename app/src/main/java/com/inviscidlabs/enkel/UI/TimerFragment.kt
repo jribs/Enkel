@@ -4,15 +4,19 @@ import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Context
 import android.os.Bundle
+import android.support.graphics.drawable.VectorDrawableCompat
 import android.support.v4.app.Fragment
 import android.support.v4.app.NotificationCompat
 import android.support.v4.app.NotificationManagerCompat
+import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import com.inviscidlabs.enkel.EnkelApp
 import com.inviscidlabs.enkel.R
 import com.inviscidlabs.enkel.ViewModel.TimerViewModel
 import kotlinx.android.synthetic.main.fragment_timer.*
+import javax.inject.Inject
 import kotlin.math.round
 
 private const val ARG_TIME = "args_timeInMilliseconds"
@@ -20,9 +24,12 @@ private const val ARG_TIME = "args_timeInMilliseconds"
 
 class TimerFragment: Fragment(){
 
+
+    @Inject
+    lateinit var appContext: Context
     private var timerTime = 0L
-    private lateinit var mContext: Context
     private var fragmentInterface: OnTimerFragmentResult? = null
+    private val wrapper = ContextThemeWrapper(activity, R.style.AppTheme)
 
 //region Lifecycle functions
 
@@ -50,6 +57,9 @@ class TimerFragment: Fragment(){
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
+
+        if(savedInstanceState==null) setInitialDrawableColors()
+
         val factory = TimerViewModel.Factory(timerTime)
         val viewModel = ViewModelProviders.of(this, factory)
                 .get(TimerViewModel::class.java)
@@ -116,10 +126,9 @@ class TimerFragment: Fragment(){
 
     private fun adjustPlayPauseButton(isPaused: Boolean){
         when(isPaused){
-            true -> button_playpause.setImageResource(R.drawable.ic_play_arrow_black_24dp)
-            else -> button_playpause.setImageResource(R.drawable.ic_pause_black_24dp)
+            true -> setPauseDrawable()
+            else -> setPlayDrawable()
         }
-
     }
 
     private fun setProgress(timeElapsed: Long) {
@@ -129,15 +138,32 @@ class TimerFragment: Fragment(){
             progressBar.progress = ((timeElapsed / timerTime*100).toInt())
         }
     }
-
+    private fun setInitialDrawableColors(){
+        setResetDrawable()
+        setPlayDrawable()
+    }
 //endregion
 
 
 //region Bottom Layer Functions
 
+    private fun setPlayDrawable(){
+        button_playpause.setImageDrawable(themedDrawable(R.drawable.ic_play_arrow_black_24dp))
+    }
+
+    private fun setPauseDrawable(){
+        button_playpause.setImageDrawable(themedDrawable(R.drawable.ic_pause_black_24dp))
+    }
+
+    private fun setResetDrawable(){
+        button_reset.setImageDrawable(themedDrawable(R.drawable.enk_reset))
+    }
 
 
 //endregion
+
+//Utilities
+    private fun themedDrawable(drawableID: Int) = VectorDrawableCompat.create(resources, drawableID, wrapper.theme)
 
     interface OnTimerFragmentResult{
         fun timerDone(totalTime: Long)

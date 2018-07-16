@@ -30,7 +30,8 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult {
 
     //TODO - Add menu
     override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
-        return super.onPrepareOptionsMenu(menu)
+        menuInflater.inflate(R.menu.main_activity, menu)
+        return true
     }
 
     override fun timerDone(totalTime: Long) {
