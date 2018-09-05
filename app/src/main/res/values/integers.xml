@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     
-    <integer name="playpause_animation_duration">300</integer>
+    <integer name="controls_animation_duration">500</integer>
     
 </resources>

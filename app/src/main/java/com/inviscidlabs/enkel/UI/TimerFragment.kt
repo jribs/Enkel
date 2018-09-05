@@ -130,6 +130,8 @@ class TimerFragment: Fragment(){
         viewModel.timeIsExpired.observe(this, Observer {isExpired->
             if(isExpired!=null && isExpired){
                 fragmentInterface?.timerDone(timerTime)
+                viewModel.resetTimer()
+                setResetDrawable()
             }
         })
     }
@@ -140,7 +142,6 @@ class TimerFragment: Fragment(){
             else -> setPauseDrawable()
         }
     }
-
     private fun setProgress(timeElapsed: Long) {
         if (timerTime > 0 && timeElapsed <= timerTime) {
             progressBar.progress = timeElapsed.toInt() //((timeElapsed / timerTime*100).toInt())
