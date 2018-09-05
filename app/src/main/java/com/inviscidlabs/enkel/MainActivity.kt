@@ -52,7 +52,7 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult {
             val mContext = applicationContext
             val mBuilder = NotificationCompat.Builder(mContext, CHANNEL_ID)
             with(mBuilder){
-                setSmallIcon(R.drawable.ic_play_arrow_black_24dp)
+                setSmallIcon(R.drawable.play)
                 setContentTitle("Enkel Timer Done")
                 setContentText("${totalTime} seconds is up")
                 setStyle(NotificationCompat.BigTextStyle().bigText("${totalTime} seconds is up"))

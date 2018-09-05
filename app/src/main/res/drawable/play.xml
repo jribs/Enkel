@@ -1,0 +1,29 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+        android:width="128dp"
+        android:height="128dp"
+        android:viewportWidth="128"
+        android:viewportHeight="128">
+    <group
+        android:name="@string/drawgroup_playpause_allparts"
+        android:pivotX="64"
+        android:pivotY="64"
+        android:scaleX="1"
+        android:scaleY="1"
+        >
+
+        <group android:name="@string/drawgroup_playpause_top">
+            <path
+                android:name="@string/pathname_playpause_upper"
+                android:fillColor="@color/colorAccent"
+                android:pathData="@string/pathdata_play_icon_upper"/>
+        </group>
+
+        <group android:name="@string/drawgroup_playpause_bottom">
+            <path
+                android:name="@string/pathname_playpause_bottom"
+                android:fillColor="@color/colorAccent"
+                android:pathData="@string/pathdata_play_icon_bottom"
+                />
+        </group>
+    </group>
+</vector>

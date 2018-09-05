@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/enk_reset"
+    >
+
+    <target
+        android:name="@string/drawgroup_reset_allparts"
+        android:animation="@animator/rotate_360"
+        />
+    
+</animated-vector>

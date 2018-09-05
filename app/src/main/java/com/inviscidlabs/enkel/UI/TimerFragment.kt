@@ -3,21 +3,18 @@ package com.inviscidlabs.enkel.UI
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Context
+import android.graphics.drawable.Animatable
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.support.graphics.drawable.VectorDrawableCompat
 import android.support.v4.app.Fragment
-import android.support.v4.app.NotificationCompat
-import android.support.v4.app.NotificationManagerCompat
 import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.inviscidlabs.enkel.EnkelApp
 import com.inviscidlabs.enkel.R
 import com.inviscidlabs.enkel.ViewModel.TimerViewModel
 import kotlinx.android.synthetic.main.fragment_timer.*
-import javax.inject.Inject
-import kotlin.math.round
 
 private const val ARG_TIME = "args_timeInMilliseconds"
 
@@ -25,17 +22,23 @@ private const val ARG_TIME = "args_timeInMilliseconds"
 class TimerFragment: Fragment(){
 
 
-    @Inject
     lateinit var appContext: Context
     private var timerTime = 0L
     private var fragmentInterface: OnTimerFragmentResult? = null
     private lateinit var wrapper:ContextThemeWrapper
 
+    //Views
+
+
 //region Lifecycle functions
 
     override fun onAttach(context: Context?) {
-        ((context as EnkelApp).appComponent.injectFragment(this))
-        wrapper = ContextThemeWrapper(appContext, R.style.AppTheme)
+        if(context!=null) {
+            appContext = context.applicationContext
+            wrapper = ContextThemeWrapper(appContext, R.style.AppTheme)
+        } else {
+            throw RuntimeException(this::class.java.simpleName)
+        }
 
         if(arguments?.containsKey(ARG_TIME)==null){
             throw RuntimeException(this::class.java.simpleName + " must be created " +
@@ -53,9 +56,8 @@ class TimerFragment: Fragment(){
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val v = inflater.inflate(R.layout.fragment_timer, container, false)
 
-        return v
+        return inflater.inflate(R.layout.fragment_timer, container, false)
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -90,6 +92,7 @@ class TimerFragment: Fragment(){
 
     private fun setupResetButton(viewModel: TimerViewModel){
         button_reset.setOnClickListener {
+            setResetDrawable()
             viewModel.resetTimer()
         }
     }
@@ -129,8 +132,8 @@ class TimerFragment: Fragment(){
 
     private fun adjustPlayPauseButton(isPaused: Boolean){
         when(isPaused){
-            true -> setPauseDrawable()
-            else -> setPlayDrawable()
+            true -> setPlayDrawable()
+            else -> setPauseDrawable()
         }
     }
 
@@ -151,15 +154,24 @@ class TimerFragment: Fragment(){
 //region Bottom Layer Functions
 
     private fun setPlayDrawable(){
-        button_playpause.setImageDrawable(themedDrawable(R.drawable.ic_play_arrow_black_24dp))
+        button_playpause.apply {
+            setImageResource(R.drawable.anim_play_to_pause)
+            drawable.startAsAnimatable()
+        }
     }
 
     private fun setPauseDrawable(){
-        button_playpause.setImageDrawable(themedDrawable(R.drawable.ic_pause_black_24dp))
+        button_playpause.apply {
+            setImageResource(R.drawable.anim_pause_to_play)
+            drawable.startAsAnimatable()
+        }
     }
 
     private fun setResetDrawable(){
-        button_reset.setImageDrawable(themedDrawable(R.drawable.enk_reset))
+        button_reset.apply {
+            setImageResource(R.drawable.anim_reset_twirl)
+            drawable.startAsAnimatable()
+        }
     }
 
 
@@ -167,6 +179,8 @@ class TimerFragment: Fragment(){
 
 //Utilities
     private fun themedDrawable(drawableID: Int) = VectorDrawableCompat.create(resources, drawableID, wrapper.theme)
+
+    private fun Drawable.startAsAnimatable() = (this as Animatable).start()
 
     interface OnTimerFragmentResult{
         fun timerDone(totalTime: Long)

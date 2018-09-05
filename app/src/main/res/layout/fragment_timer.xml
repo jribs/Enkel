@@ -90,7 +90,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/progressBar"
-            app:srcCompat="@drawable/ic_play_arrow_black_24dp" />
+            app:srcCompat="@drawable/play" />
     </LinearLayout>
 
 
