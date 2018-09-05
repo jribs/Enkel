@@ -8,6 +8,7 @@ import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.support.graphics.drawable.VectorDrawableCompat
 import android.support.v4.app.Fragment
+import android.util.Log
 import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.View
@@ -72,7 +73,10 @@ class TimerFragment: Fragment(){
         observeViewModel(viewModel)
         setupPlayButton(viewModel)
         setupResetButton(viewModel)
-        //TODO if savedInstanceState, align with ViewModel
+        Log.e("whatever", timerTime.toString())
+        progressBar.max = timerTime.toInt()
+
+
     }
 
     override fun onDetach() {
@@ -139,9 +143,8 @@ class TimerFragment: Fragment(){
 
     private fun setProgress(timeElapsed: Long) {
         if (timerTime > 0 && timeElapsed <= timerTime) {
-            progressBar.progress = ((timeElapsed / timerTime*100).toInt())
-            progressBar.max = timerTime.toInt()
-            progressBar.progress = ((timeElapsed / timerTime*100).toInt())
+            progressBar.progress = timeElapsed.toInt() //((timeElapsed / timerTime*100).toInt())
+            Log.e("whatever",timeElapsed.toString())
         }
     }
     private fun setInitialDrawableColors(){
