@@ -14,7 +14,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.inviscidlabs.enkel.R
-import com.inviscidlabs.enkel.ViewModel.TimerViewModel
+import com.inviscidlabs.enkel.viewmodel.TimerViewModel
 import kotlinx.android.synthetic.main.fragment_timer.*
 
 private const val ARG_TIME = "args_timeInMilliseconds"
@@ -34,6 +34,7 @@ class TimerFragment: Fragment(){
 //region Lifecycle functions
 
     override fun onAttach(context: Context?) {
+
         if(context!=null) {
             appContext = context.applicationContext
             wrapper = ContextThemeWrapper(appContext, R.style.AppTheme)
@@ -73,10 +74,7 @@ class TimerFragment: Fragment(){
         observeViewModel(viewModel)
         setupPlayButton(viewModel)
         setupResetButton(viewModel)
-        Log.e("whatever", timerTime.toString())
         progressBar.max = timerTime.toInt()
-
-
     }
 
     override fun onDetach() {
@@ -145,7 +143,6 @@ class TimerFragment: Fragment(){
     private fun setProgress(timeElapsed: Long) {
         if (timerTime > 0 && timeElapsed <= timerTime) {
             progressBar.progress = timeElapsed.toInt() //((timeElapsed / timerTime*100).toInt())
-            Log.e("whatever",timeElapsed.toString())
         }
     }
     private fun setInitialDrawableColors(){
@@ -189,7 +186,8 @@ class TimerFragment: Fragment(){
     interface OnTimerFragmentResult{
         fun timerDone(totalTime: Long)
     }
-        companion object {
+
+    companion object {
         @JvmStatic
         fun newInstance(timeInSeconds: Long) = TimerFragment().apply {
             arguments = Bundle().apply {

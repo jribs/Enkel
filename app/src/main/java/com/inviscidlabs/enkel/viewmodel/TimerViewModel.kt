@@ -1,4 +1,4 @@
-package com.inviscidlabs.enkel.ViewModel
+package com.inviscidlabs.enkel.viewmodel
 
 import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MutableLiveData

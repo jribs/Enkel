@@ -3,7 +3,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/add_timer"
+        android:id="@+id/menu_add_timer"
         android:icon="@drawable/add_timer_white"
         android:title="@string/menu_add_timer"
         app:showAsAction="always|withText" />
