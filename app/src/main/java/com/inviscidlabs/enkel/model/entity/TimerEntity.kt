@@ -6,6 +6,6 @@ import android.arch.persistence.room.PrimaryKey
 
 @Entity
 data class TimerEntity(
-        @ColumnInfo(name = "timer_time_msecs") val timeInMS: Long,
+        @ColumnInfo(name = "timer_time_msecs") var timeInMS: Long,
         @ColumnInfo(name = "timer_position") val position: Int? = null,
         @PrimaryKey(autoGenerate = true) val timerID: Int? = null)

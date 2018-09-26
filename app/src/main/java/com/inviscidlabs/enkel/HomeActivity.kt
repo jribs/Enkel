@@ -10,7 +10,7 @@ import android.support.v4.app.NotificationCompat
 import android.support.v4.app.NotificationManagerCompat
 import android.view.Menu
 import android.view.MenuItem
-import com.inviscidlabs.enkel.UI.AddTimerDialog
+import com.inviscidlabs.enkel.UI.EditTimerFragment
 import com.inviscidlabs.enkel.UI.TimerFragment
 import com.inviscidlabs.enkel.model.entity.TimerEntity
 import com.inviscidlabs.enkel.viewmodel.HomeViewModel
@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger
 private const val CHANNEL_ID = "enkelTime"
 
 class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult,
-                    AddTimerDialog.OnAddTimerEvent{
+                    EditTimerFragment.OnEditTimerEvent{
 
 
 
@@ -37,8 +37,6 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult,
 
         makeTimerFragment(10)
     }
-
-
 
     override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.main_activity, menu)
@@ -61,10 +59,9 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult,
     }
 
     override fun onTimerSave(timerToSave: TimerEntity) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        //TODO make selected timer = saved timer
+
     }
-
-
 //endregion
 
 //region 2nd Layer Functions
@@ -78,10 +75,11 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult,
     }
 
     private fun startAddTimerFragment(){
-        val fragment: AddTimerDialog = AddTimerDialog()
+        val fragment: EditTimerFragment = EditTimerFragment.newInstance(true)
         supportFragmentManager.beginTransaction()
                 .replace(R.id.container, fragment)
                 .commit()
+
     }
 
     //TODO use DI context

@@ -13,12 +13,11 @@ import com.inviscidlabs.enkel.R
 import com.inviscidlabs.enkel.model.entity.TimerEntity
 import com.inviscidlabs.enkel.viewmodel.EditTimerViewModel
 import kotlinx.android.synthetic.main.fragment_edit_timer.*
-import java.lang.Double.parseDouble
 
 private const val ARG_INSERT = "ARG_INSERT"
 
-class AddTimerDialog : Fragment() {
-    private var listener: OnAddTimerEvent? = null
+class EditTimerFragment : Fragment() {
+    private var listener: OnEditTimerEvent? = null
 
     private val viewModel: EditTimerViewModel by lazy {
         ViewModelProviders.of(this).get(EditTimerViewModel::class.java)
@@ -28,10 +27,10 @@ class AddTimerDialog : Fragment() {
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        if (context is OnAddTimerEvent) {
+        if (context is OnEditTimerEvent) {
             listener = context
         } else {
-            throw RuntimeException(context.toString() + " must implement OnFragmentInteractionListener")
+            throw RuntimeException(context.toString() + " must implement OnEditTimerEvent")
         }
 
         setInsertMode()
@@ -43,10 +42,14 @@ class AddTimerDialog : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        instantiateButtons()
+
         return inflater.inflate(R.layout.fragment_edit_timer, container, false)
     }
 
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+        instantiateButtons()
+    }
 
     override fun onDetach() {
         super.onDetach()
@@ -56,7 +59,6 @@ class AddTimerDialog : Fragment() {
 
 
 //region 2nd Layer Functions
-
     private fun setInsertMode() {
         if (arguments?.containsKey(ARG_INSERT) == null || arguments == null) {
             throw RuntimeException(this::class.java.simpleName + " must be created " +
@@ -92,13 +94,13 @@ class AddTimerDialog : Fragment() {
 
 //endregion
 
-    interface OnAddTimerEvent {
+    interface OnEditTimerEvent {
         fun onTimerSave(timerToSave: TimerEntity)
     }
 
     companion object {
         @JvmStatic
-        fun newInstance(insertNewTimerMode: Boolean) = TimerFragment().apply {
+        fun newInstance(insertNewTimerMode: Boolean) = EditTimerFragment().apply {
             arguments = Bundle().apply {
                 putBoolean(ARG_INSERT, insertNewTimerMode)
             }

@@ -6,7 +6,7 @@ import com.inviscidlabs.enkel.model.entity.TimerEntity
 @Dao
 interface TimerDao{
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertTimer(timer: TimerEntity)
+    fun insertTimer(timer: TimerEntity): Long
 
     @Query("SELECT * FROM TimerEntity WHERE timerID = :timerID")
     fun getTimerFromID(timerID: Int): TimerEntity
