@@ -2,21 +2,24 @@ package com.inviscidlabs.enkel
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.os.Build
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.app.NotificationCompat
 import android.support.v4.app.NotificationManagerCompat
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import com.inviscidlabs.enkel.UI.EditTimerFragment
-import com.inviscidlabs.enkel.UI.TimerFragment
-import com.inviscidlabs.enkel.model.entity.TimerEntity
+import com.inviscidlabs.enkel.ui.EditTimerFragment
+import com.inviscidlabs.enkel.ui.TimerFragment
 import com.inviscidlabs.enkel.viewmodel.HomeViewModel
 import java.util.concurrent.atomic.AtomicInteger
 
 private const val CHANNEL_ID = "enkelTime"
+private const val TAG_EDIT_TIMER = "editTimer"
+private const val TAG_TIMER_FRAG = "timerFrag"
 
 class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult,
                     EditTimerFragment.OnEditTimerEvent{
@@ -58,15 +61,36 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult,
         notifyTimerDone(totalTime)
     }
 
-    override fun onTimerSave(timerToSave: TimerEntity) {
-        //TODO make selected timer = saved timer
+    override fun onTimerSave(savedTimerID: Long) {
 
+        makeTimerFragment(60)
+        //TODO loadNewTimer
     }
+
+
 //endregion
 
 //region 2nd Layer Functions
 
-    //TODO consolidate fragment swappping to a function
+    private fun observeTimers(){
+        viewModel.timers.observe(this, Observer {timerList->
+            timerList ?: Log.e(this.javaClass.simpleName, "List of timers is null")
+                    .also {return@Observer}
+
+            //TODO use SharedPreferences to sleect right timer
+            //TODO make pagerstrip indicate the # of timers
+        })
+    }
+
+    private fun observeSelectedTimer(){
+        viewModel.selectedTimer.observe(this, Observer {timer->
+            timer ?: return@Observer
+
+            makeTimerFragment(timer.timeInMS)
+        })
+    }
+
+//TODO consolidate fragment swappping to a function
     private fun makeTimerFragment(countdownTime: Long){
         val fragment = TimerFragment.newInstance(countdownTime)
         supportFragmentManager.beginTransaction()
@@ -77,10 +101,13 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult,
     private fun startAddTimerFragment(){
         val fragment: EditTimerFragment = EditTimerFragment.newInstance(true)
         supportFragmentManager.beginTransaction()
-                .replace(R.id.container, fragment)
+                .replace(R.id.container, fragment, TAG_EDIT_TIMER)
                 .commit()
 
     }
+
+
+
 
     //TODO use DI context
     private fun notifyTimerDone(totalTime: Long){
@@ -113,6 +140,7 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult,
         }
     }
 //endregion
+
 
 
 }

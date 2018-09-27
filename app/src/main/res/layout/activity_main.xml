@@ -11,4 +11,13 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 
+    <com.inviscidlabs.enkel.ui.custom.VerticalViewPager
+        android:id="@+id/pager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"> 
+
+    <!--TODO Title strip or vertical indicator-->
+    
+    </com.inviscidlabs.enkel.ui.custom.VerticalViewPager>
+
 </android.support.constraint.ConstraintLayout>

@@ -11,9 +11,12 @@ interface TimerDao{
     @Query("SELECT * FROM TimerEntity WHERE timerID = :timerID")
     fun getTimerFromID(timerID: Int): TimerEntity
 
+    @Query("SELECT * FROM TimerEntity")
+    fun getAllTimers():List<TimerEntity>
+
     @Delete
-    fun deleteUser(timer: TimerEntity)
+    fun deleteTimer(timer: TimerEntity)
 
     @Update
-    fun updateUser(user: TimerEntity)
+    fun updateTimer(user: TimerEntity)
 }

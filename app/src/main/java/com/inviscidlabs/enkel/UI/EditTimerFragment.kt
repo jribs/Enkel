@@ -1,5 +1,6 @@
-package com.inviscidlabs.enkel.UI
+package com.inviscidlabs.enkel.ui
 
+import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Context
 import android.os.Bundle
@@ -10,7 +11,6 @@ import android.view.View
 import android.view.ViewGroup
 
 import com.inviscidlabs.enkel.R
-import com.inviscidlabs.enkel.model.entity.TimerEntity
 import com.inviscidlabs.enkel.viewmodel.EditTimerViewModel
 import kotlinx.android.synthetic.main.fragment_edit_timer.*
 
@@ -48,7 +48,9 @@ class EditTimerFragment : Fragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
+        observeSavedTimerID()
         instantiateButtons()
+
     }
 
     override fun onDetach() {
@@ -77,6 +79,13 @@ class EditTimerFragment : Fragment() {
         button_dialog_cancel.setOnClickListener {activity?.onBackPressed()}
     }
 
+    private fun observeSavedTimerID(){
+        viewModel.timerSavedID.observe(this, Observer {timerID->
+            timerID ?: return@Observer
+            listener?.onTimerSave(timerID)
+        })
+    }
+
 //endregion
 
 //region Bottom Layer Functions
@@ -95,7 +104,7 @@ class EditTimerFragment : Fragment() {
 //endregion
 
     interface OnEditTimerEvent {
-        fun onTimerSave(timerToSave: TimerEntity)
+        fun onTimerSave(savedTimerID: Long)
     }
 
     companion object {
