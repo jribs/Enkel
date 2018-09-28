@@ -14,7 +14,9 @@ import android.view.Menu
 import android.view.MenuItem
 import com.inviscidlabs.enkel.ui.EditTimerFragment
 import com.inviscidlabs.enkel.ui.TimerFragment
+import com.inviscidlabs.enkel.ui.custom.TimerSlidePagerAdapter
 import com.inviscidlabs.enkel.viewmodel.HomeViewModel
+import kotlinx.android.synthetic.main.activity_main.*
 import java.util.concurrent.atomic.AtomicInteger
 
 private const val CHANNEL_ID = "enkelTime"
@@ -37,8 +39,8 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult,
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         createNotificationChannel()
-
-        makeTimerFragment(10)
+        setupPagerAdapter()
+        observeTimers()
     }
 
     override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
@@ -63,40 +65,43 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult,
 
     override fun onTimerSave(savedTimerID: Long) {
 
-        makeTimerFragment(60)
+
         //TODO loadNewTimer
     }
 
-
 //endregion
 
+
 //region 2nd Layer Functions
+
+    private fun setupPagerAdapter() {
+        val pagerAdapter = TimerSlidePagerAdapter(viewModel = viewModel, fragmentManager = supportFragmentManager)
+        with(pager){
+            adapter = pagerAdapter
+            homeViewModel = viewModel
+        }
+
+    }
 
     private fun observeTimers(){
         viewModel.timers.observe(this, Observer {timerList->
             timerList ?: Log.e(this.javaClass.simpleName, "List of timers is null")
                     .also {return@Observer}
 
+            pager.adapter?.notifyDataSetChanged()
             //TODO use SharedPreferences to sleect right timer
             //TODO make pagerstrip indicate the # of timers
         })
     }
 
-    private fun observeSelectedTimer(){
-        viewModel.selectedTimer.observe(this, Observer {timer->
-            timer ?: return@Observer
 
-            makeTimerFragment(timer.timeInMS)
-        })
-    }
-
-//TODO consolidate fragment swappping to a function
-    private fun makeTimerFragment(countdownTime: Long){
-        val fragment = TimerFragment.newInstance(countdownTime)
-        supportFragmentManager.beginTransaction()
-                .replace(R.id.container, fragment)
-                .commit()
-    }
+//TODO Delete once function replaced
+//    private fun makeTimerFragment(countdownTime: Long){
+//        val fragment = TimerFragment.newInstance(countdownTime)
+//        supportFragmentManager.beginTransaction()
+//                .replace(R.id.container, fragment)
+//                .commit()
+//    }
 
     private fun startAddTimerFragment(){
         val fragment: EditTimerFragment = EditTimerFragment.newInstance(true)
@@ -106,12 +111,8 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult,
 
     }
 
-
-
-
     //TODO use DI context
     private fun notifyTimerDone(totalTime: Long){
-
             val mContext = applicationContext
             val mBuilder = NotificationCompat.Builder(mContext, CHANNEL_ID)
             with(mBuilder){
@@ -122,7 +123,6 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult,
                 priority = NotificationCompat.PRIORITY_DEFAULT
                 setAutoCancel(true)
             }
-
             NotificationManagerCompat.from(mContext).notify(mNotificationID.incrementAndGet(), mBuilder.build())
     }
 

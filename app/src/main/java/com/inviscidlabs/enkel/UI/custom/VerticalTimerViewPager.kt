@@ -5,18 +5,23 @@ import android.support.v4.view.ViewPager
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
+import com.inviscidlabs.enkel.viewmodel.HomeViewModel
 
 //Reference is : https://stackoverflow.com/questions/13477820/android-vertical-viewpager
 
 //Overriding default touch events and swapping x/y coordinates prior to handling
 
-class VerticalViewPager(context: Context): ViewPager(context){
+class VerticalTimerViewPager(context: Context, attributeSet: AttributeSet): ViewPager(context, attributeSet){
+
+    var homeViewModel: HomeViewModel?=null
 
     init {
         setPageTransformer(true, VerticalPageTransformer())
     }
 
+
     override fun onInterceptTouchEvent(ev: MotionEvent?): Boolean {
+
         ev ?: return false
         val intercepted =  super.onInterceptTouchEvent(swapXYOnMotionEvent(ev))
             swapXYOnMotionEvent(ev)
@@ -24,6 +29,11 @@ class VerticalViewPager(context: Context): ViewPager(context){
     }
 
     override fun onTouchEvent(ev: MotionEvent?): Boolean {
+        homeViewModel ?: throwNoViewModelException()
+        when(ev?.action){
+            MotionEvent.ACTION_DOWN -> homeViewModel?.onSwipeDown()
+            MotionEvent.ACTION_UP -> homeViewModel?.onSwipeUp()
+        }
         return super.onTouchEvent(swapXYOnMotionEvent(ev ?: return false))
     }
 
@@ -36,6 +46,11 @@ class VerticalViewPager(context: Context): ViewPager(context){
         }
         return motionEvent
     }
+
+    private fun throwNoViewModelException():Boolean{
+        throw RuntimeException("${this.javaClass.simpleName}: HomeViewModel must be set by setting the variable homeViewModel")
+    }
+
 }
 
 private class VerticalPageTransformer: ViewPager.PageTransformer{
@@ -66,6 +81,7 @@ private class VerticalPageTransformer: ViewPager.PageTransformer{
     private fun makePageInvisible(page: View) {
         page.alpha = 0f
     }
+
     //endregion
 
 }

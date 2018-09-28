@@ -15,13 +15,12 @@ class HomeViewModel():ViewModel(){
 
     private val timerDao = EnkelApp.CURRENT_DB_INSTANCE.timerDao()
 
-    private val _selectedTimer =  MutableLiveData<TimerEntity>()
+    private val _selectedTimerIndex =  MutableLiveData<Int>()
     private val _timers = MutableLiveData<List<TimerEntity>>()
-    private val _loading = MutableLiveData<Boolean>()
 
-    val selectedTimer: LiveData<TimerEntity> get() = _selectedTimer
+    val selectedTimerIndex: LiveData<Int> get() = _selectedTimerIndex
     val timers: LiveData<List<TimerEntity>> get() = _timers
-    val loading: LiveData<Boolean> get() = _loading
+
 
     fun insertTimer(timer: TimerEntity){
         timerDao.insertTimer(timer=timer)
@@ -29,23 +28,39 @@ class HomeViewModel():ViewModel(){
 
     init {
         loadTimers()
+        setInitialSelectedTimer()
     }
 
-    fun onSwipeUp(){}
-    fun onSwipeDown(){}
+//region UI
+    fun onSwipeUp(){
+        with(_selectedTimerIndex.value ?: return){
+            _selectedTimerIndex.postValue(this.inc())
+        }
 
+    }
 
+    fun onSwipeDown(){
+        with(_selectedTimerIndex.value ?: return){
+            _selectedTimerIndex.postValue(this.dec())
+        }
+    }
     private fun loadTimers(){
         Single.fromCallable {
-            _loading.postValue(true)
             _timers.postValue(timerDao.getAllTimers())
-            _loading.postValue(false)
+
         }
                 .subscribeOn(Schedulers.io())
                 .subscribeBy(onError = {throwable->
-                    _loading.postValue(false)
                     Log.e(this.javaClass.simpleName, throwable.localizedMessage)
                 })
+    }
+
+//endregion
+
+
+    private fun setInitialSelectedTimer() {
+            _selectedTimerIndex.postValue(0)
+
     }
 
 }
