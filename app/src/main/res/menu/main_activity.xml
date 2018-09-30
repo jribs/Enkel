@@ -7,4 +7,18 @@
         android:icon="@drawable/add_timer_white"
         android:title="@string/menu_add_timer"
         app:showAsAction="always|withText" />
+
+    <item
+        android:id="@+id/menu_edit_timer"
+        android:icon="@drawable/edit"
+        android:title="@string/edit_timer"
+        app:showAsAction="collapseActionView"
+        />
+
+    <item
+        android:id="@+id/menu_delete_timer"
+        android:icon="@drawable/delete"
+        android:title="Delete Timer"
+        app:showAsAction="collapseActionView"
+        />
 </menu>

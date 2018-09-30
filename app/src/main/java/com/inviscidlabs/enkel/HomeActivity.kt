@@ -51,6 +51,8 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult,
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         when(item?.itemId){
             R.id.menu_add_timer -> startAddTimerFragment()
+            R.id.menu_delete_timer -> viewModel.deleteTimerClicked()
+            R.id.menu_edit_timer -> startEditTimerFragForEditMode()
             else -> return super.onOptionsItemSelected(item)
         }
         return true
@@ -64,16 +66,12 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult,
     }
 
     override fun onTimerSave(savedTimerID: Long) {
-
-
         //TODO loadNewTimer
     }
 
 //endregion
 
-
 //region 2nd Layer Functions
-
     private fun setupPagerAdapter() {
         val pagerAdapter = TimerSlidePagerAdapter(viewModel = viewModel, fragmentManager = supportFragmentManager)
         with(pager){
@@ -94,6 +92,10 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult,
         })
     }
 
+    private fun startEditTimerFragForEditMode() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
 
 //TODO Delete once function replaced
 //    private fun makeTimerFragment(countdownTime: Long){
@@ -111,6 +113,13 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult,
 
     }
 
+    private fun deleteCurrentFragment(){
+
+    }
+
+    private fun editCurrentFragment(){
+
+    }
     //TODO use DI context
     private fun notifyTimerDone(totalTime: Long){
             val mContext = applicationContext

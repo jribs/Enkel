@@ -38,7 +38,6 @@ class VerticalTimerViewPager(context: Context, attributeSet: AttributeSet): View
     }
 
     private fun swapXYOnMotionEvent(motionEvent: MotionEvent): MotionEvent{
-
         with(motionEvent){
             val newX = (y/height)*width
             val newY = (x/width) * height
@@ -56,12 +55,10 @@ class VerticalTimerViewPager(context: Context, attributeSet: AttributeSet): View
 private class VerticalPageTransformer: ViewPager.PageTransformer{
 
     override fun transformPage(page: View, position: Float) {
-        if(position <-1){
-            makePageInvisible(page)
-        } else if (position <=1){
-            overrideXTranslationWithYTranslation(page, position)
-        } else {
-            makePageInvisible(page)
+        when {
+            position <-1 -> makePageInvisible(page)
+            position <=1 -> overrideXTranslationWithYTranslation(page, position)
+            else -> makePageInvisible(page)
         }
 
     }
