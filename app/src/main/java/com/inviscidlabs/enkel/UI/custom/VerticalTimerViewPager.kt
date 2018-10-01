@@ -46,10 +46,11 @@ class VerticalTimerViewPager(context: Context, attributeSet: AttributeSet): View
         return motionEvent
     }
 
+    
+
     private fun throwNoViewModelException():Boolean{
         throw RuntimeException("${this.javaClass.simpleName}: HomeViewModel must be set by setting the variable homeViewModel")
     }
-
 }
 
 private class VerticalPageTransformer: ViewPager.PageTransformer{
@@ -60,7 +61,6 @@ private class VerticalPageTransformer: ViewPager.PageTransformer{
             position <=1 -> overrideXTranslationWithYTranslation(page, position)
             else -> makePageInvisible(page)
         }
-
     }
 
     //region 2nd layer functions

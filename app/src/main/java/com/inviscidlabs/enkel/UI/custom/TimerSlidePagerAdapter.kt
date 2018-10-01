@@ -24,7 +24,12 @@ class TimerSlidePagerAdapter(fragmentManager: FragmentManager, private val viewM
 
     override fun getCount(): Int = viewModel.timers.value?.size ?: 0
 
-//Internal Functions
+    override fun notifyDataSetChanged() {
+
+        super.notifyDataSetChanged()
+    }
+
+    //Internal Functions
     private fun makeTimerFragment(position: Int): Fragment {
         val timeInMS = viewModel.timers.value?.get(position)?.timeInMS ?: 0
         return if (timeInMS > 0) {
@@ -34,5 +39,4 @@ class TimerSlidePagerAdapter(fragmentManager: FragmentManager, private val viewM
             NoDataFragment()
         }
     }
-
 }

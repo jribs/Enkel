@@ -15,7 +15,7 @@ interface TimerDao{
     fun getAllTimers():List<TimerEntity>
 
     @Delete
-    fun deleteTimer(timer: TimerEntity)
+    fun deleteTimer(timer: TimerEntity): Int
 
     @Update
     fun updateTimer(user: TimerEntity)

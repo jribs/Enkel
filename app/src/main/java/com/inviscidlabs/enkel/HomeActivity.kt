@@ -37,13 +37,16 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult,
 //region Lifecycle Functions
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContentView(R.layout.activity_main)
-        createNotificationChannel()
+        savedInstanceState ?: createNotificationChannel()
+
         setupPagerAdapter()
         observeTimers()
     }
 
     override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
+        menu?.clear()
         menuInflater.inflate(R.menu.main_activity, menu)
         return true
     }
@@ -51,8 +54,8 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult,
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         when(item?.itemId){
             R.id.menu_add_timer -> startAddTimerFragment()
-            R.id.menu_delete_timer -> viewModel.deleteTimerClicked()
-            R.id.menu_edit_timer -> startEditTimerFragForEditMode()
+            R.id.menu_delete_timer -> deleteCurrentFragment()
+            R.id.menu_edit_timer -> editCurrentFragment()
             else -> return super.onOptionsItemSelected(item)
         }
         return true
@@ -78,7 +81,6 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult,
             adapter = pagerAdapter
             homeViewModel = viewModel
         }
-
     }
 
     private fun observeTimers(){
@@ -87,23 +89,17 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult,
                     .also {return@Observer}
 
             pager.adapter?.notifyDataSetChanged()
-            //TODO use SharedPreferences to sleect right timer
+            //TODO use SharedPreferences to select right timer
             //TODO make pagerstrip indicate the # of timers
         })
     }
+
 
     private fun startEditTimerFragForEditMode() {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
 
-//TODO Delete once function replaced
-//    private fun makeTimerFragment(countdownTime: Long){
-//        val fragment = TimerFragment.newInstance(countdownTime)
-//        supportFragmentManager.beginTransaction()
-//                .replace(R.id.container, fragment)
-//                .commit()
-//    }
 
     private fun startAddTimerFragment(){
         val fragment: EditTimerFragment = EditTimerFragment.newInstance(true)
@@ -114,7 +110,7 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult,
     }
 
     private fun deleteCurrentFragment(){
-
+        viewModel.deleteTimerClicked()
     }
 
     private fun editCurrentFragment(){

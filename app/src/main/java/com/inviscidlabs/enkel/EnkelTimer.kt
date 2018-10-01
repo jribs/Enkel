@@ -5,8 +5,6 @@ import android.os.CountDownTimer
 abstract class EnkelTimer(private val millisInFuture: Long, private val countdownInterval: Long){
 
     private var timeLeftInMillis = millisInFuture
-
-
     private var timer: CountDownTimer? = null
 
     private fun startTimerFromTimeLeft(){

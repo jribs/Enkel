@@ -63,12 +63,10 @@ class HomeViewModel():ViewModel(){
                         Log.e(TAG, throwable.localizedMessage)
                 },
                     onSuccess = {
-                        selectNextTimer()
+                        Log.e(TAG, "$it rows successfully deleted")
+                        loadTimers()
                         })
     }
-
-
-
 
 //endregion
 
@@ -87,6 +85,7 @@ class HomeViewModel():ViewModel(){
                     })
     }
 
+    //TODO make this an int and call after onSuccess
     private fun selectNextTimer(){
         //Get the current selectedIndex. If it is null return
         //get the next timer in the iteration - = list size, 0, <list size, +1, list size is 0, -1
@@ -100,7 +99,7 @@ class HomeViewModel():ViewModel(){
         } else if(listSize>-1 && currentIndex+1 < listSize){
             nextIndex = currentIndex+1
         }
-        _selectedTimerIndex.value = nextIndex
+        _selectedTimerIndex.postValue(nextIndex)
     }
 
     private fun setInitialSelectedTimer() {
