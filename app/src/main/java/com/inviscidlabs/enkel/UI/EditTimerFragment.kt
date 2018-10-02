@@ -5,6 +5,7 @@ import android.arch.lifecycle.ViewModelProviders
 import android.content.Context
 import android.os.Bundle
 import android.support.v4.app.Fragment
+import android.support.v4.app.FragmentActivity
 import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
@@ -12,14 +13,18 @@ import android.view.ViewGroup
 
 import com.inviscidlabs.enkel.R
 import com.inviscidlabs.enkel.viewmodel.EditTimerViewModel
+import com.inviscidlabs.enkel.viewmodel.HomeViewModel
 import kotlinx.android.synthetic.main.fragment_edit_timer.*
 
-private const val ARG_INSERT = "ARG_INSERT"
+private const val ARG_TIMERID_TO_LOAD = "ARG_TIMER_ID"
 
 class EditTimerFragment : Fragment() {
-    private var listener: OnEditTimerEvent? = null
 
-    private val viewModel: EditTimerViewModel by lazy {
+    private val TAG = this.javaClass.simpleName
+
+    private var fragmentUIEventListener: OnEditTimerEvent? = null
+    private var activityViewModel: HomeViewModel? = null
+    private val fragmentViewModel: EditTimerViewModel by lazy {
         ViewModelProviders.of(this).get(EditTimerViewModel::class.java)
     }
 
@@ -27,17 +32,8 @@ class EditTimerFragment : Fragment() {
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        if (context is OnEditTimerEvent) {
-            listener = context
-        } else {
-            throw RuntimeException(context.toString() + " must implement OnEditTimerEvent")
-        }
-
-        setInsertMode()
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+        makeSureActivityHasListener(context)
+        communicateArgumentsToFragmentViewModel()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -48,45 +44,65 @@ class EditTimerFragment : Fragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
+        instantiateActivityViewModel()
         observeSavedTimerID()
         instantiateButtons()
-
     }
 
     override fun onDetach() {
         super.onDetach()
-        listener = null
+        fragmentUIEventListener = null
     }
-//endregion
-
 
 //region 2nd Layer Functions
-    private fun setInsertMode() {
-        if (arguments?.containsKey(ARG_INSERT) == null || arguments == null) {
-            throw RuntimeException(this::class.java.simpleName + " must be created " +
-                    "using the newInstance constructor with a valid Boolean")
+
+    private fun makeSureActivityHasListener(context: Context) {
+        if (context is OnEditTimerEvent) {
+            fragmentUIEventListener = context
         } else {
-            viewModel.setInsertMode(arguments!!.getBoolean(ARG_INSERT))
+            throw RuntimeException(context.toString() + " must implement OnEditTimerEvent")
+        }
+    }
+
+    private fun communicateArgumentsToFragmentViewModel() {
+        val timerIDArgument = arguments?.getInt(ARG_TIMERID_TO_LOAD)
+        val insertModeFromArguments = (timerIDArgument==null)
+        fragmentViewModel.setInsertMode(insertModeFromArguments)
+        if(timerIDArgument != null){
+            fragmentViewModel.loadTimer(timerIDArgument)
+        }
+    }
+
+    private fun instantiateActivityViewModel() {
+        when{
+            (activity==null)                -> throwNoParentActivityException()
+            (activity !is FragmentActivity) -> throwNotFragmentActivityException()
+
+            else -> activityViewModel = ViewModelProviders.of(activity as FragmentActivity)
+                                            .get(HomeViewModel::class.java)
         }
     }
 
     private fun instantiateButtons() {
         button_dialog_save.setOnClickListener {
             if(isValidTimerInput()){
-                viewModel.saveTimer(compileTimerFromCurrentUserInput())
+                fragmentViewModel.saveTimer(compileTimerFromCurrentUserInput())
             }
         }
         button_dialog_cancel.setOnClickListener {activity?.onBackPressed()}
     }
 
     private fun observeSavedTimerID(){
-        viewModel.timerSavedID.observe(this, Observer {timerID->
+        fragmentViewModel.timerSavedID.observe(this, Observer { timerID->
             timerID ?: return@Observer
-            listener?.onTimerSave(timerID)
+            fragmentUIEventListener?.onTimerSave(timerID)
         })
     }
 
 //endregion
+
+    //endregion
+
 
 //region Bottom Layer Functions
 
@@ -101,6 +117,14 @@ class EditTimerFragment : Fragment() {
         return field_edit_timer.text.toString().toLong()
     }
 
+    private fun throwNoParentActivityException() {
+        throw RuntimeException("$TAG: Parent Activity context does not have the appropriate ViewModel attached to it." +
+                 " Unable to load or save TimerEntity")
+    }
+
+    private fun throwNotFragmentActivityException() {
+       throw RuntimeException("$TAG: Parent Activity must be a FragmentActivity")
+    }
 //endregion
 
     interface OnEditTimerEvent {
@@ -109,9 +133,9 @@ class EditTimerFragment : Fragment() {
 
     companion object {
         @JvmStatic
-        fun newInstance(insertNewTimerMode: Boolean) = EditTimerFragment().apply {
+        fun newInstance(timerToLoad: Int?) = EditTimerFragment().apply {
             arguments = Bundle().apply {
-                putBoolean(ARG_INSERT, insertNewTimerMode)
+                putInt(ARG_TIMERID_TO_LOAD, timerToLoad ?: return@apply)
             }
         }
     }

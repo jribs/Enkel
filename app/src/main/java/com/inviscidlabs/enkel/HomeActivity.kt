@@ -5,8 +5,8 @@ import android.app.NotificationManager
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.os.Build
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v4.app.FragmentActivity
 import android.support.v4.app.NotificationCompat
 import android.support.v4.app.NotificationManagerCompat
 import android.util.Log
@@ -15,18 +15,18 @@ import android.view.MenuItem
 import com.inviscidlabs.enkel.ui.EditTimerFragment
 import com.inviscidlabs.enkel.ui.TimerFragment
 import com.inviscidlabs.enkel.ui.custom.TimerSlidePagerAdapter
+import com.inviscidlabs.enkel.ui.custom.VerticalTimerViewPager
 import com.inviscidlabs.enkel.viewmodel.HomeViewModel
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.concurrent.atomic.AtomicInteger
 
 private const val CHANNEL_ID = "enkelTime"
-private const val TAG_EDIT_TIMER = "editTimer"
-private const val TAG_TIMER_FRAG = "timerFrag"
 
-class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult,
-                    EditTimerFragment.OnEditTimerEvent{
+class MainActivity : FragmentActivity(), TimerFragment.OnTimerFragmentResult,
+                    EditTimerFragment.OnEditTimerEvent,
+                    VerticalTimerViewPager.TimerViewPagerEvent{
 
-
+    //TODO add TAG and use for error logging
 
     //TODO store in ViewModel or savedState
     private val mNotificationID = AtomicInteger(0)
@@ -46,19 +46,23 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult,
     }
 
     override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
-        menu?.clear()
-        menuInflater.inflate(R.menu.main_activity, menu)
-        return true
+        menuInflater.inflate(R.menu.home_activity, menu)
+        return super.onPrepareOptionsMenu(menu)
     }
+
+//    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+//        menu?.clear()
+//        menuInflater.inflate(R.menu.home_activity, menu)
+//        return super.onCreateOptionsMenu(menu)
+//    }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         when(item?.itemId){
             R.id.menu_add_timer -> startAddTimerFragment()
             R.id.menu_delete_timer -> deleteCurrentFragment()
             R.id.menu_edit_timer -> editCurrentFragment()
-            else -> return super.onOptionsItemSelected(item)
         }
-        return true
+        return super.onOptionsItemSelected(item)
     }
 
 //endregion
@@ -72,25 +76,35 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult,
         //TODO loadNewTimer
     }
 
+    override fun onViewPagerSwipeUp() {
+       viewModel.onSwipeUp()
+    }
+
+    override fun onViewPagerSwipeDown() {
+        viewModel.onSwipeDown()
+    }
+
 //endregion
 
 //region 2nd Layer Functions
+
     private fun setupPagerAdapter() {
-        val pagerAdapter = TimerSlidePagerAdapter(viewModel = viewModel, fragmentManager = supportFragmentManager)
+        val pagerAdapter = TimerSlidePagerAdapter(
+                fragmentManager = supportFragmentManager,
+                timers = viewModel?.timers?.value)
+
         with(pager){
             adapter = pagerAdapter
-            homeViewModel = viewModel
+            timerViewPagerEventListener = this@MainActivity
         }
     }
-
+    //TODO use SharedPreferences to select right timer
+    //TODO make pagerstrip indicate the # of timers
     private fun observeTimers(){
         viewModel.timers.observe(this, Observer {timerList->
             timerList ?: Log.e(this.javaClass.simpleName, "List of timers is null")
                     .also {return@Observer}
-
-            pager.adapter?.notifyDataSetChanged()
-            //TODO use SharedPreferences to select right timer
-            //TODO make pagerstrip indicate the # of timers
+            setupPagerAdapter()
         })
     }
 
@@ -99,12 +113,11 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult,
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-
-
     private fun startAddTimerFragment(){
-        val fragment: EditTimerFragment = EditTimerFragment.newInstance(true)
+        val selectedTimerID = viewModel.selectedTimerIndex.value
+        val fragment: EditTimerFragment = EditTimerFragment.newInstance(selectedTimerID)
         supportFragmentManager.beginTransaction()
-                .replace(R.id.container, fragment, TAG_EDIT_TIMER)
+                .replace(R.id.container, fragment)
                 .commit()
 
     }

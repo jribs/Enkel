@@ -47,7 +47,6 @@ class EditTimerViewModel(): ViewModel(){
         }
     }
 
-
     fun setInsertMode(insertModeValue: Boolean){
         _insertMode.value = insertModeValue
     }

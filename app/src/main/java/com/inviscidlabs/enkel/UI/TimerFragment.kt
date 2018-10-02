@@ -33,7 +33,6 @@ class TimerFragment: Fragment(){
 //region Lifecycle functions
 
     override fun onAttach(context: Context?) {
-
         if(context!=null) {
             appContext = context.applicationContext
             wrapper = ContextThemeWrapper(appContext, R.style.AppTheme)
