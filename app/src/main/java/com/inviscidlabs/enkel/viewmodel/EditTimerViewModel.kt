@@ -6,7 +6,6 @@ import android.arch.lifecycle.ViewModel
 import android.util.Log
 import com.inviscidlabs.enkel.EnkelApp
 import com.inviscidlabs.enkel.model.entity.TimerEntity
-import io.reactivex.Scheduler
 import io.reactivex.Single
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
@@ -14,55 +13,58 @@ import io.reactivex.schedulers.Schedulers
 class EditTimerViewModel(): ViewModel(){
 
     private val timerDao = EnkelApp.CURRENT_DB_INSTANCE.timerDao()
+    private val TAG = this.javaClass.simpleName
+
+    private var insertMode = false
 
     //Mutable Variables
-    private val _insertMode = MutableLiveData<Boolean>()
     private val _loadedTimer = MutableLiveData<TimerEntity>()
-    private val _savingTimer = MutableLiveData<Boolean>()
-    private val _timerSavedID = MutableLiveData<Long>()
+    private val _timerSavedID = MutableLiveData<Int>()
+
     //Immutable Properties
-    public val insertMode:LiveData<Boolean> get() = _insertMode
-    public val loadedTimer:LiveData<TimerEntity> get() = _loadedTimer
-    public val savingTimer: LiveData<Boolean> get() = _savingTimer
-    public val timerSavedID: LiveData<Long> get() = _timerSavedID
+    val loadedTimer:LiveData<TimerEntity> get() = _loadedTimer
+    val timerSavedID: LiveData<Int> get() = _timerSavedID
 
 //UI calls
-    fun loadTimer(timerID: Int){
+    fun communicateTimerID(timerID: Int){
+        insertMode = if(timerID>-1) {
+            loadTimerFromID(timerID)
+            false
+        } else {
+            true
+        }
+    }
+
+    fun saveTimerClicked(timeInMS: Long){
+        if(insertMode){
+            insertTimer(timeInMS = timeInMS)
+        } else {
+            updateTimer(timeInMS = timeInMS)
+        }
+    }
+
+//2nd Layer Functions
+
+    private fun loadTimerFromID(timerID: Int) {
         Single.fromCallable {
             _loadedTimer.postValue(timerDao.getTimerFromID(timerID))
         }
                 .subscribeOn(Schedulers.io())
                 .subscribeBy(onError = {
-                    Log.e(this.javaClass.simpleName, "Error loading timer using Room Dao")
+                    Log.e(TAG, "Error loading timer using Room Dao: ${it.localizedMessage}")
                 })
     }
-
-    fun saveTimer(timeInMS: Long){
-        insertMode.value?.let {insertModeValue ->
-            if(insertModeValue){
-                insertTimer(timeInMS = timeInMS)
-            } else {
-                updateTimer(timeInMS = timeInMS)
-            }
-        }
-    }
-
-    fun setInsertMode(insertModeValue: Boolean){
-        _insertMode.value = insertModeValue
-    }
-
-//2nd Layer Functions
 
     private fun insertTimer(timeInMS: Long){
         Single.fromCallable {
         val timerToInsert = TimerEntity(timeInMS)
-        _timerSavedID.postValue(timerDao.insertTimer(timerToInsert))
+        _timerSavedID.postValue(timerDao.insertTimer(timerToInsert).toInt())
             //TODO delete this
             Log.e(this.javaClass.simpleName + "inserted ID", _timerSavedID.value.toString())
         }
                 .subscribeOn(Schedulers.io())
                 .subscribeBy(onError = {
-                    Log.e(this.javaClass.simpleName, "Error Inserting timer using Room DAO: ${it.localizedMessage}")
+                    Log.e(TAG, "Error Inserting timer using Room DAO: ${it.localizedMessage}")
                 })
     }
 
@@ -74,11 +76,11 @@ class EditTimerViewModel(): ViewModel(){
 
             updatedTimer.timeInMS = timeInMS
             timerDao.updateTimer(updatedTimer)
-            _timerSavedID.postValue(updatedTimer.timerID?.toLong())
+            _timerSavedID.postValue(updatedTimer.timerID)
             }
                     .subscribeOn(Schedulers.io())
                     .subscribeBy(onError = {
-                        Log.e(this.javaClass.simpleName, "Error updating Timer with DAO")})
+                        Log.e(TAG, "Error updating Timer with DAO: ${it.localizedMessage}")})
     }
 
 

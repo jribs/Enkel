@@ -3,12 +3,9 @@ package com.inviscidlabs.enkel.ui.custom
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentStatePagerAdapter
-import android.util.Log
 import com.inviscidlabs.enkel.model.entity.TimerEntity
-import com.inviscidlabs.enkel.ui.NoDataFragment
-import com.inviscidlabs.enkel.ui.TimerFragment
-import com.inviscidlabs.enkel.viewmodel.HomeViewModel
-import kotlin.RuntimeException
+import com.inviscidlabs.enkel.ui.home.NoDataFragment
+import com.inviscidlabs.enkel.ui.home.TimerFragment
 
 class TimerSlidePagerAdapter(fragmentManager: FragmentManager, private val timers: List<TimerEntity>?):
         FragmentStatePagerAdapter(fragmentManager){

@@ -16,19 +16,13 @@ class HomeViewModel():ViewModel(){
     private val TAG = this.javaClass.simpleName
     private val timerDao = EnkelApp.CURRENT_DB_INSTANCE.timerDao()
 
-
 //Private Mutables
     private val _selectedTimerIndex =  MutableLiveData<Int>()
     private val _timers = MutableLiveData<List<TimerEntity>>()
 
-//Public Immutables
+//Public Accessors
     val selectedTimerIndex: LiveData<Int> get() = _selectedTimerIndex
     val timers: LiveData<List<TimerEntity>> get() = _timers
-
-
-    fun insertTimer(timer: TimerEntity){
-        timerDao.insertTimer(timer=timer)
-    }
 
     init {
         loadTimers()
@@ -48,7 +42,10 @@ class HomeViewModel():ViewModel(){
         }
     }
 
-    fun timerSaved() = loadTimers()
+    fun timerSuccessfullySaved(savedTimerID: Int){
+        loadTimers()
+        postNewTimerIndex(savedTimerID)
+    }
 
     fun deleteTimerClicked(){
         val currentIndex = _selectedTimerIndex.value ?: return
@@ -66,9 +63,13 @@ class HomeViewModel():ViewModel(){
                         Log.e(TAG, "$it rows successfully deleted")
                         loadTimers()
                         })
-    }
 
+        //TODO reset selected Timer
+    }
 //endregion
+
+
+//region 2nd layer functions
 
     private fun loadTimers(){
         Single.fromCallable {
@@ -77,33 +78,45 @@ class HomeViewModel():ViewModel(){
         }
                 .subscribeOn(Schedulers.io())
                 .subscribeBy(
-                    onError = {throwable->
-                    Log.e(TAG, throwable.localizedMessage)
+                        onError = {throwable->
+                            Log.e(TAG, throwable.localizedMessage)
                         },
-                    onSuccess = {
-                        //TODO setInitialSelectedTimer, but better
-                    })
+                        onSuccess = {
+
+                        })
     }
 
-    //TODO make this an int and call after onSuccess
-    private fun selectNextTimer(){
-        //Get the current selectedIndex. If it is null return
-        //get the next timer in the iteration - = list size, 0, <list size, +1, list size is 0, -1
-        //Set as currently selected timer
-        val currentIndex: Int = _selectedTimerIndex.value ?: return
-        val listSize: Int = _timers.value?.size ?: 0
-        var nextIndex = -1
-        //TODO make this work with a with statement
-        if((currentIndex+1) == listSize){
-            nextIndex = 0
-        } else if(listSize>-1 && currentIndex+1 < listSize){
-            nextIndex = currentIndex+1
+    private fun postNewTimerIndex(savedTimerID: Int) {
+        Single.fromCallable {
+            if (isValidTimerID(savedTimerID)) {
+                val newTimerIndex = _timers.value?.indexOfFirst { timerWithID ->
+                    timerWithID.timerID == savedTimerID
+                } ?: return@fromCallable
+
+                _selectedTimerIndex.postValue(newTimerIndex)
+            }
+        }.subscribeOn(Schedulers.io())
+                .subscribeBy {
+
+                }
+    }
+
+    private fun isValidTimerID(savedTimerID: Int):Boolean {
+        val timersWithSavedID = timers.value?.filter { it.timerID == savedTimerID }
+        when (timersWithSavedID?.size) {
+            0       -> Log.e(TAG, "No timers found in ViewModel List with id of $savedTimerID").also {
+                        return false}
+            1       -> return true
+            null    -> Log.e(TAG, "filter size is null").also { return false}
+            else    -> return false
         }
-        _selectedTimerIndex.postValue(nextIndex)
+        return true
     }
 
     private fun setInitialSelectedTimer() {
             _selectedTimerIndex.postValue(0)
     }
+
+//endregion
 
 }

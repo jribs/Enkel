@@ -1,4 +1,4 @@
-package com.inviscidlabs.enkel.ui
+package com.inviscidlabs.enkel.ui.home
 
 
 import android.os.Bundle

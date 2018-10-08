@@ -25,7 +25,7 @@ class VerticalTimerViewPager(context: Context, attributeSet: AttributeSet): View
     }
 
     override fun onTouchEvent(ev: MotionEvent?): Boolean {
-        timerViewPagerEventListener ?: throwInterfaceExeption()
+        timerViewPagerEventListener ?: throwInterfaceException()
         when(ev?.action){
             MotionEvent.ACTION_DOWN ->  timerViewPagerEventListener?.onViewPagerSwipeDown()
             MotionEvent.ACTION_UP ->    timerViewPagerEventListener?.onViewPagerSwipeUp()
@@ -33,7 +33,7 @@ class VerticalTimerViewPager(context: Context, attributeSet: AttributeSet): View
         return super.onTouchEvent(swapXYOnMotionEvent(ev ?: return false))
     }
 
-    private fun throwInterfaceExeption():Boolean {
+    private fun throwInterfaceException():Boolean {
         throw RuntimeException("${this.javaClass.simpleName}: Parent Activity must implement TimerViewPagerEvent interface" )
     }
 

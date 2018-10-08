@@ -3,17 +3,20 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    tools:context=".ui.EditTimerFragment">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.edit_timer.EditTimerFragment"
+    android:background="#ffffff"
+    >
 
     <EditText
-
         android:id="@+id/field_edit_timer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Time in seconds"
-        android:inputType="number" />
+        android:inputType="number"
+
+        />
 
 
     <LinearLayout

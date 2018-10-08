@@ -1,4 +1,4 @@
-package com.inviscidlabs.enkel.ui
+package com.inviscidlabs.enkel.ui.home
 
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
