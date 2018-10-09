@@ -3,15 +3,15 @@ package com.inviscidlabs.enkel.ui.custom
 import android.content.Context
 import android.support.v4.view.ViewPager
 import android.util.AttributeSet
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
+import com.inviscidlabs.enkel.viewmodel.HomeViewModel
 
 //Reference is : https://stackoverflow.com/questions/13477820/android-vertical-viewpager
 
 //Overriding default touch events and swapping x/y coordinates prior to handling
 class VerticalTimerViewPager(context: Context, attributeSet: AttributeSet): ViewPager(context, attributeSet){
-
-    var timerViewPagerEventListener: TimerViewPagerEvent? = null
 
     init {
         setPageTransformer(true, VerticalPageTransformer())
@@ -25,16 +25,7 @@ class VerticalTimerViewPager(context: Context, attributeSet: AttributeSet): View
     }
 
     override fun onTouchEvent(ev: MotionEvent?): Boolean {
-        timerViewPagerEventListener ?: throwInterfaceException()
-        when(ev?.action){
-            MotionEvent.ACTION_DOWN ->  timerViewPagerEventListener?.onViewPagerSwipeDown()
-            MotionEvent.ACTION_UP ->    timerViewPagerEventListener?.onViewPagerSwipeUp()
-        }
         return super.onTouchEvent(swapXYOnMotionEvent(ev ?: return false))
-    }
-
-    private fun throwInterfaceException():Boolean {
-        throw RuntimeException("${this.javaClass.simpleName}: Parent Activity must implement TimerViewPagerEvent interface" )
     }
 
     private fun swapXYOnMotionEvent(motionEvent: MotionEvent): MotionEvent{
@@ -46,11 +37,9 @@ class VerticalTimerViewPager(context: Context, attributeSet: AttributeSet): View
         return motionEvent
     }
 
-    interface TimerViewPagerEvent{
-        fun onViewPagerSwipeUp()
-        fun onViewPagerSwipeDown()
-    }
 }
+
+
 
 private class VerticalPageTransformer: ViewPager.PageTransformer{
 
@@ -79,5 +68,20 @@ private class VerticalPageTransformer: ViewPager.PageTransformer{
     }
 
     //endregion
+
+}
+
+class SelectedTimerChangedListener(private val homeViewModel: HomeViewModel): ViewPager.OnPageChangeListener{
+    //TODO figure out what these two Scrolly Bois do
+    override fun onPageScrollStateChanged(state: Int) {
+    }
+
+    override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
+    }
+
+    override fun onPageSelected(position: Int) {
+        homeViewModel.timerSelectedFromViewPager(currentPosition=position)
+        //TODO delete
+    }
 
 }

@@ -19,10 +19,12 @@ class HomeViewModel():ViewModel(){
 //Private Mutables
     private val _selectedTimerIndex =  MutableLiveData<Int>()
     private val _timers = MutableLiveData<List<TimerEntity>>()
+    private val _targetedTimerIndexSelection = MutableLiveData<Int>()
 
 //Public Accessors
     val selectedTimerIndex: LiveData<Int> get() = _selectedTimerIndex
     val timers: LiveData<List<TimerEntity>> get() = _timers
+    val targetedTimerIndexSelection get() = _targetedTimerIndexSelection
 
     init {
         loadTimers()
@@ -30,16 +32,9 @@ class HomeViewModel():ViewModel(){
     }
 
 //region UI
-    fun onSwipeUp(){
-        with(_selectedTimerIndex.value ?: return){
-            _selectedTimerIndex.postValue(this.inc())
-        }
-    }
 
-    fun onSwipeDown(){
-        with(_selectedTimerIndex.value ?: return){
-            _selectedTimerIndex.postValue(this.dec())
-        }
+    fun timerSelectedFromViewPager(currentPosition: Int){
+        _selectedTimerIndex.value = currentPosition
     }
 
     fun timerSuccessfullySaved(savedTimerID: Int){
@@ -63,14 +58,11 @@ class HomeViewModel():ViewModel(){
                         Log.e(TAG, "$it rows successfully deleted")
                         loadTimers()
                         })
-
-        //TODO reset selected Timer
     }
 //endregion
 
 
 //region 2nd layer functions
-
     private fun loadTimers(){
         Single.fromCallable {
             _timers.postValue(timerDao.getAllTimers())
@@ -93,12 +85,11 @@ class HomeViewModel():ViewModel(){
                     timerWithID.timerID == savedTimerID
                 } ?: return@fromCallable
 
-                _selectedTimerIndex.postValue(newTimerIndex)
+                _targetedTimerIndexSelection.postValue(newTimerIndex)
             }
-        }.subscribeOn(Schedulers.io())
-                .subscribeBy {
-
-                }
+        }
+                .subscribeOn(Schedulers.io())
+                .subscribe()
     }
 
     private fun isValidTimerID(savedTimerID: Int):Boolean {

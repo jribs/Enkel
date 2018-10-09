@@ -14,6 +14,7 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import com.inviscidlabs.enkel.R
+import com.inviscidlabs.enkel.ui.custom.SelectedTimerChangedListener
 import com.inviscidlabs.enkel.ui.custom.TimerSlidePagerAdapter
 import com.inviscidlabs.enkel.ui.custom.VerticalTimerViewPager
 import com.inviscidlabs.enkel.ui.edit_timer.ARG_TIMERID
@@ -27,8 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger
 private const val CHANNEL_ID = "enkelTime"
 private const val REQ_LAUNCH_EDITTIMER = 461
 
-class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult,
-                    VerticalTimerViewPager.TimerViewPagerEvent{
+class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult{
 
 //region Local Constants
     private val TAG = this.javaClass.simpleName
@@ -45,11 +45,12 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult,
 
         setContentView(R.layout.activity_main)
         setSupportActionBar(home_toolbar)
+        setupPagerAdapter()
 
         savedInstanceState ?: createNotificationChannel()
-        setupPagerAdapter()
+
         observeTimers()
-        observeSelectedTimer()
+        observeTargetedTimerSelection()
     }
 
 
@@ -82,13 +83,6 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult,
         notifyTimerDone(totalTime)
     }
 
-    override fun onViewPagerSwipeUp() {
-       viewModel.onSwipeUp()
-    }
-
-    override fun onViewPagerSwipeDown() {
-        viewModel.onSwipeDown()
-    }
 //endregion
 
 //region 2nd Layer Functions
@@ -99,7 +93,7 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult,
 
         with(pager){
             adapter = pagerAdapter
-            timerViewPagerEventListener = this@MainActivity
+            addOnPageChangeListener(SelectedTimerChangedListener(viewModel))
         }
     }
     //TODO use SharedPreferences to select right timer
@@ -113,10 +107,13 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult,
     }
 
     //TODO test
-    private fun observeSelectedTimer() {
-        viewModel.selectedTimerIndex.observe(this, Observer {selectedTimerIndex->
-            selectedTimerIndex ?: return@Observer
-            pager.currentItem = selectedTimerIndex
+    private fun observeTargetedTimerSelection(){
+        viewModel.targetedTimerIndexSelection.observe(this, Observer {index ->
+            index ?: return@Observer
+            when(index){
+                -1 -> return@Observer
+                else -> pager.currentItem = index
+            }
         })
     }
 
@@ -133,15 +130,14 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult,
     }
 
     private fun respondToSavedTimer(returnedData: Intent?) {
-        if(returnedData==null){
+        if(returnedData==null || returnedData.extras.getInt(ARG_TIMERID)==null){
             Log.e(TAG, "No data returned from EditTimerActivity saved result")
             return
         }
-        val returnedTimerID: Int = returnedData.extras.getInt(ARG_TIMERID)
 
+        val returnedTimerID: Int = returnedData.extras.getInt(ARG_TIMERID)
         viewModel.timerSuccessfullySaved(savedTimerID = returnedTimerID)
     }
-
 
     private fun deleteCurrentFragment(){
         viewModel.deleteTimerClicked()
