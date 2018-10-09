@@ -90,12 +90,12 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult{
         val pagerAdapter = TimerSlidePagerAdapter(
                 fragmentManager = supportFragmentManager,
                 timers = viewModel?.timers?.value)
-
         with(pager){
             adapter = pagerAdapter
             addOnPageChangeListener(SelectedTimerChangedListener(viewModel))
         }
     }
+
     //TODO use SharedPreferences to select right timer
     //TODO make pagerstrip indicate the # of timers
     private fun observeTimers(){

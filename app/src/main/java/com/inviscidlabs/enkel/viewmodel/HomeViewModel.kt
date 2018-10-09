@@ -35,6 +35,7 @@ class HomeViewModel():ViewModel(){
 
     fun timerSelectedFromViewPager(currentPosition: Int){
         _selectedTimerIndex.value = currentPosition
+
     }
 
     fun timerSuccessfullySaved(savedTimerID: Int){
@@ -74,7 +75,6 @@ class HomeViewModel():ViewModel(){
                             Log.e(TAG, throwable.localizedMessage)
                         },
                         onSuccess = {
-
                         })
     }
 

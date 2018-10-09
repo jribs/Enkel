@@ -31,5 +31,7 @@
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
     <string name="edit_timer">Edit Timer</string>
+    <string name="key_timer_time">timerTime</string>
+    <string name="key_timer_id">timerID</string>
 
 </resources>

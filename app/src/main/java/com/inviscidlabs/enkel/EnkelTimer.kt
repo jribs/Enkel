@@ -2,7 +2,7 @@ package com.inviscidlabs.enkel
 
 import android.os.CountDownTimer
 
-abstract class EnkelTimer(private val millisInFuture: Long, private val countdownInterval: Long){
+abstract class EnkelTimer(private val millisInFuture: Long, private val countdownInterval: Long, id: Long){
 
     private var timeLeftInMillis = millisInFuture
     private var timer: CountDownTimer? = null

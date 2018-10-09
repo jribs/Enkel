@@ -28,7 +28,7 @@ class TimerViewModel(private val secondsToCountdown: Long): ViewModel(){
         }
     }
 
-    private val timer = object: EnkelTimer(secondsToCountdown*1000, 1000) {
+    private val timer = object: EnkelTimer(secondsToCountdown*1000, 1000, 0) {
         override fun onFinish() {
             _timeIsExpired.value = true
         }
