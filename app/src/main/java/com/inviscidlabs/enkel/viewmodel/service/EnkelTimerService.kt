@@ -4,6 +4,7 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
@@ -25,8 +26,10 @@ const val ACTION_RESET: String = "resetTimerInService"
 class EnkelTimerService: Service(){
 
     private val CHANNEL = "Enkel"
+    private val NOTIF_ID = 6969
     private val TAG = this.javaClass.simpleName
     private val activeTimers = mutableListOf<EnkelTimer>()
+
 
 //region Service Functions
     override fun onCreate() {
@@ -55,7 +58,7 @@ class EnkelTimerService: Service(){
 //region 2nd Layer Functions
     private fun startTimer(intent: Intent) {
         if(!intentHasNecessaryData(intent)) return
-        val timerID = intent.getLongExtra(getString(R.string.key_timer_id),-1)
+        val timerID = intent.getLongExtra(getString(R.string.key_timer_id),-1L)
         val timerTime = intent.getLongExtra(getString(R.string.key_timer_time), -1L)
         val indexOfTimer = activeTimers.indexOfFirst {it.id == timerID}
         when(indexOfTimer){
@@ -69,8 +72,8 @@ class EnkelTimerService: Service(){
         val timerID = intent.getLongExtra(getString(R.string.key_timer_id),-1)
         val indexOfTimer = activeTimers.indexOfFirst { it.id ==timerID }
         when(indexOfTimer){
-            -1      -> pauseExistingTimer(indexOfTimer)
-            else    -> Log.e(TAG, "Couldn't find timer with ID=$timerID in list of running timers")
+            -1      -> Log.e(TAG, "Couldn't find timer with ID=$timerID in list of running timers")
+            else    -> pauseExistingTimer(indexOfTimer)
         }
         if(activeTimers.size<1) stopForegroundService()
     }
@@ -89,8 +92,13 @@ class EnkelTimerService: Service(){
     }
 
     private fun pauseExistingTimer(indexOfTimerToPause: Int){
-        activeTimers[indexOfTimerToPause].pause()
-        //TODO stop foreground if no other active services
+        val timerToPause = activeTimers[indexOfTimerToPause]
+        with(timerToPause){
+            pause()
+            if(!hasPlayingTimers()){
+               stopForeground(true)
+            }
+        }
     }
 
     private fun intentHasNecessaryData(intentToAnalyze: Intent?): Boolean {
@@ -119,9 +127,7 @@ class EnkelTimerService: Service(){
                     stopForegroundService()
                 }
             }
-
             override fun onTick(millisUntilFinished: Long) {
-
                 startForeground(timerID_Int, notificationFromTimeRemaining(millisUntilFinished))
             }
         }
@@ -130,11 +136,22 @@ class EnkelTimerService: Service(){
 //endregion
 
 //region Utility Functions
-
-
     private fun intentIsNull():Boolean{
         Log.e(TAG, "Supplied Intent is null. No data to start timer")
         return false
+    }
+
+    private fun hasPlayingTimers():Boolean{
+        val playingTimers = activeTimers.filter {timer->
+            timer.status == EnkelTimer.TimerStatus.PLAYING
+        }
+        return (playingTimers.isNotEmpty())
+    }
+
+
+    private fun deleteTimerNotification(timerID: Int) {
+        val notifManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notifManager.cancelAll()
     }
 
     private fun stopForegroundService(){
@@ -149,15 +166,26 @@ class EnkelTimerService: Service(){
         } else {""}
 
         val notifBuilder = NotificationCompat.Builder(this, notifChannel)
+
         with(notifBuilder){
             setSmallIcon(R.drawable.play)
             setStyle(NotificationCompat.BigTextStyle())
-            setContentTitle("${activeTimers.size} timers running")
+            setContentTitle(numberOfTimersRunningText())
             setContentText("${DateUtils.formatElapsedTime(millisUntilFinished/1000)}")
             setShowWhen(false)
             setAutoCancel(false)
+            setChannelId(CHANNEL)
         }
         return notifBuilder.build()
+    }
+
+    private fun numberOfTimersRunningText():String{
+        val numTimersRunning = activeTimers.size
+        return if(numTimersRunning<2){
+            "$numTimersRunning timer running"
+        }else {
+            "$numTimersRunning timers running"
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

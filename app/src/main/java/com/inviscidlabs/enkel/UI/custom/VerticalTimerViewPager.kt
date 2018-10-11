@@ -37,51 +37,38 @@ class VerticalTimerViewPager(context: Context, attributeSet: AttributeSet): View
         return motionEvent
     }
 
-}
+    private class VerticalPageTransformer: ViewPager.PageTransformer{
 
-
-
-private class VerticalPageTransformer: ViewPager.PageTransformer{
-
-    override fun transformPage(page: View, position: Float) {
-        when {
-            position <-1 -> makePageInvisible(page)
-            position <=1 -> overrideXTranslationWithYTranslation(page, position)
-            else -> makePageInvisible(page)
+        override fun transformPage(page: View, position: Float) {
+            when {
+                position <-1 -> makePageInvisible(page)
+                position <=1 -> overrideXTranslationWithYTranslation(page, position)
+                else -> makePageInvisible(page)
+            }
         }
-    }
 
-    //region 2nd layer functions
-    private fun overrideXTranslationWithYTranslation(page: View, position: Float) {
-        page.apply {
-            alpha = 1f
-            //Offset default X translation since we want Y
-            translationX = width * -position
+        //region 2nd layer functions
+        private fun overrideXTranslationWithYTranslation(page: View, position: Float) {
+            page.apply {
+                alpha = 1f
+                //Offset default X translation since we want Y
+                translationX = width * -position
 
-            val yPositionDestination = position * height
-            translationY = yPositionDestination
+                val yPositionDestination = position * height
+                translationY = yPositionDestination
+            }
         }
+
+        private fun makePageInvisible(page: View) {
+            page.alpha = 0f
+        }
+
+        //endregion
+
     }
-
-    private fun makePageInvisible(page: View) {
-        page.alpha = 0f
-    }
-
-    //endregion
-
 }
 
-class SelectedTimerChangedListener(private val homeViewModel: HomeViewModel): ViewPager.OnPageChangeListener{
-    //TODO figure out what these two Scrolly Bois do
-    override fun onPageScrollStateChanged(state: Int) {
-    }
 
-    override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
-    }
 
-    override fun onPageSelected(position: Int) {
-        homeViewModel.timerSelectedFromViewPager(currentPosition=position)
-        //TODO delete
-    }
 
-}
+

@@ -72,6 +72,7 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult{
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        data?:return
         val intentPair = Pair(requestCode, resultCode)
         when(intentPair){
             Pair(REQ_LAUNCH_EDITTIMER, RESULT_EDIT_CANCELED) -> super.onActivityResult(requestCode, resultCode, data)
@@ -149,7 +150,7 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult{
         startActivityForResult(startEditActivityIntent, REQ_LAUNCH_EDITTIMER)
     }
 
-    private fun respondToSavedTimer(returnedData: Intent?) {
+    private fun respondToSavedTimer(returnedData: Intent) {
         if(returnedData==null || returnedData.extras.getInt(ARG_TIMERID)==null){
             Log.e(TAG, "No data returned from EditTimerActivity saved result")
             return
@@ -197,7 +198,7 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult{
 //region Utilities
     private fun makeServiceIntentWithExtras(timer: TimerEntity): Intent{
         val intent = Intent(this, EnkelTimerService::class.java).apply {
-            putExtra(getString(R.string.key_timer_id), timer.timerID)
+            putExtra(getString(R.string.key_timer_id), timer.timerID?.toLong())
             putExtra(getString(R.string.key_timer_time), timer.timeInMS)
         }
         return intent
