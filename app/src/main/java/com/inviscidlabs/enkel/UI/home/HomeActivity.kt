@@ -14,14 +14,17 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import com.inviscidlabs.enkel.R
+import com.inviscidlabs.enkel.model.entity.TimerEntity
 import com.inviscidlabs.enkel.ui.custom.SelectedTimerChangedListener
 import com.inviscidlabs.enkel.ui.custom.TimerSlidePagerAdapter
-import com.inviscidlabs.enkel.ui.custom.VerticalTimerViewPager
 import com.inviscidlabs.enkel.ui.edit_timer.ARG_TIMERID
 import com.inviscidlabs.enkel.ui.edit_timer.EditTimerActivity
 import com.inviscidlabs.enkel.ui.edit_timer.RESULT_EDIT_CANCELED
 import com.inviscidlabs.enkel.ui.edit_timer.RESULT_TIMER_SAVED
 import com.inviscidlabs.enkel.viewmodel.HomeViewModel
+import com.inviscidlabs.enkel.viewmodel.service.ACTION_PAUSE
+import com.inviscidlabs.enkel.viewmodel.service.ACTION_START_TIMER
+import com.inviscidlabs.enkel.viewmodel.service.EnkelTimerService
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -83,7 +86,24 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult{
         notifyTimerDone(totalTime)
     }
 
-//endregion
+    //TODO, make current Timer be a Timer Object easier implementation
+    override fun playClicked() {
+        val currentTimerIndex = viewModel.selectedTimerIndex.value ?: 0
+        val currentTimer = viewModel.timers.value?.get(currentTimerIndex) ?: return
+        val playServiceIntent = makeServiceIntentWithExtras(currentTimer)
+        playServiceIntent.action = ACTION_START_TIMER
+        startService(playServiceIntent)
+    }
+
+    override fun pauseClicked() {
+        val currentTimerIndex = viewModel.selectedTimerIndex.value ?: 0
+        val currentTimer = viewModel.timers.value?.get(currentTimerIndex) ?: return
+        val pauseServiceIntent = makeServiceIntentWithExtras(currentTimer)
+        pauseServiceIntent.action = ACTION_PAUSE
+        startService(pauseServiceIntent)
+    }
+
+    //endregion
 
 //region 2nd Layer Functions
     private fun setupPagerAdapter() {
@@ -172,6 +192,17 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult{
         }
     }
 //endregion
+
+
+//region Utilities
+    private fun makeServiceIntentWithExtras(timer: TimerEntity): Intent{
+        val intent = Intent(this, EnkelTimerService::class.java).apply {
+            putExtra(getString(R.string.key_timer_id), timer.timerID)
+            putExtra(getString(R.string.key_timer_time), timer.timeInMS)
+        }
+        return intent
+    }
+
 
 
 

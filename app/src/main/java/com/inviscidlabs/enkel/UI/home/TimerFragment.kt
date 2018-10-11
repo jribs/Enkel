@@ -87,6 +87,13 @@ class TimerFragment: Fragment(){
         button_playpause.setOnClickListener {
             val isPaused = viewModel.isPaused.value ?: true
             viewModel.setPauseStatus(!isPaused)
+            with(fragmentInterface?: return@setOnClickListener){
+                if(isPaused){
+                    playClicked()
+                } else {
+                    pauseClicked()
+                }
+            }
         }
     }
 
@@ -94,6 +101,7 @@ class TimerFragment: Fragment(){
         button_reset.setOnClickListener {
             setResetDrawable()
             viewModel.resetTimer()
+            fragmentInterface?.pauseClicked()
         }
     }
 
@@ -181,8 +189,11 @@ class TimerFragment: Fragment(){
 
     private fun Drawable.startAsAnimatable() = (this as Animatable).start()
 
+
     interface OnTimerFragmentResult{
         fun timerDone(totalTime: Long)
+        fun playClicked()
+        fun pauseClicked()
     }
 
     companion object {

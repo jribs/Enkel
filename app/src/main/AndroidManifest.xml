@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.inviscidlabs.enkel">
 
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <application
         android:name=".EnkelApp"
         android:allowBackup="true"
@@ -10,6 +11,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+
         <activity android:name=".ui.home.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -21,10 +23,13 @@
         <activity android:name=".ui.edit_timer.EditTimerActivity">
         </activity>
 
-        <service android:name=".service.EnkelTimerService">
+        <service android:name="com.inviscidlabs.enkel.viewmodel.service.EnkelTimerService"
+            android:permission="android.permission.FOREGROUND_SERVICE"
+            >
             <intent-filter>
                 <action android:name="android.media.browse.MediaBrowserService"/>
             </intent-filter>
+
         </service>
     </application>
 
