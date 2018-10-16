@@ -4,6 +4,8 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
+import android.arch.lifecycle.LiveData
+import android.arch.lifecycle.MutableLiveData
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -25,6 +27,7 @@ const val ACTION_RESET: String = "resetTimerInService"
 
 class EnkelTimerService: Service(){
 
+    val delete: LiveData<Boolean> = MutableLiveData<Boolean>()
     private val CHANNEL = "Enkel"
     private val NOTIF_ID = 6969
     private val TAG = this.javaClass.simpleName
@@ -128,7 +131,7 @@ class EnkelTimerService: Service(){
                 }
             }
             override fun onTick(millisUntilFinished: Long) {
-                startForeground(timerID_Int, notificationFromTimeRemaining(millisUntilFinished))
+                startForeground(timerID_Int, notificationFromTimeRemaining(millisUntilFinished, timerID))
             }
         }
     }
@@ -160,7 +163,7 @@ class EnkelTimerService: Service(){
         stopSelf()
     }
 
-    private fun notificationFromTimeRemaining(millisUntilFinished: Long): Notification{
+    private fun notificationFromTimeRemaining(millisUntilFinished: Long, id: Long): Notification{
         val notifChannel = if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.O){
             createNotificationChannel()
         } else {""}
@@ -175,6 +178,8 @@ class EnkelTimerService: Service(){
             setShowWhen(false)
             setAutoCancel(false)
             setChannelId(CHANNEL)
+            setSortKey(millisUntilFinished.toString())
+            setGroup(id.toString())
         }
         return notifBuilder.build()
     }

@@ -32,7 +32,6 @@ class HomeViewModel():ViewModel(){
     }
 
 //region UI
-
     fun timerSelectedFromViewPager(currentPosition: Int){
         _selectedTimerIndex.value = currentPosition
 
