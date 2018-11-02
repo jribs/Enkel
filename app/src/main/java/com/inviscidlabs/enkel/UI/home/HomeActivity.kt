@@ -4,15 +4,20 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Build
 import android.os.Bundle
 import android.support.v4.app.NotificationCompat
 import android.support.v4.app.NotificationManagerCompat
+import android.support.v4.content.LocalBroadcastManager
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import com.inviscidlabs.enkel.EnkelApp
 import com.inviscidlabs.enkel.R
 import com.inviscidlabs.enkel.model.entity.TimerEntity
 import com.inviscidlabs.enkel.ui.custom.SelectedTimerChangedListener
@@ -24,6 +29,7 @@ import com.inviscidlabs.enkel.ui.edit_timer.RESULT_TIMER_SAVED
 import com.inviscidlabs.enkel.viewmodel.HomeViewModel
 import com.inviscidlabs.enkel.viewmodel.service.ACTION_PAUSE
 import com.inviscidlabs.enkel.viewmodel.service.ACTION_START_TIMER
+import com.inviscidlabs.enkel.viewmodel.service.ACTION_TIMER_UPDATED
 import com.inviscidlabs.enkel.viewmodel.service.EnkelTimerService
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.concurrent.atomic.AtomicInteger
@@ -42,6 +48,7 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult{
     private val viewModel: HomeViewModel by lazy {
         ViewModelProviders.of(this).get(HomeViewModel::class.java) }
 
+
 //region Lifecycle Functions
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,6 +62,7 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult{
         observeTimers()
         observeTargetedTimerSelection()
     }
+
 
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -94,6 +102,7 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult{
         val playServiceIntent = makeServiceIntentWithExtras(currentTimer)
         playServiceIntent.action = ACTION_START_TIMER
         startService(playServiceIntent)
+        registerBroadcastReceiver()
     }
 
     override fun pauseClicked() {
@@ -107,6 +116,7 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult{
     //endregion
 
 //region 2nd Layer Functions
+
     private fun setupPagerAdapter() {
         val pagerAdapter = TimerSlidePagerAdapter(
                 fragmentManager = supportFragmentManager,
@@ -164,7 +174,25 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult{
         viewModel.deleteTimerClicked()
     }
 
-//region 3rd layer functions
+    private fun registerBroadcastReceiver(){
+        val localBroadcastManager = LocalBroadcastManager.getInstance(this)
+        localBroadcastManager.registerReceiver(makeHomeActivityReceiver(), IntentFilter(ACTION_TIMER_UPDATED))
+
+    }
+
+    private fun makeHomeActivityReceiver(): BroadcastReceiver {
+        return (object: BroadcastReceiver(){
+            override fun onReceive(context: Context?, intent: Intent) {
+                //TODO time elapse
+                Log.e(TAG, "time Elapsed Intent Received")
+                if(intent.hasExtra(getString(R.string.key_timer_time))){
+                    Log.e(TAG, "${intent.extras.getLong(getString(R.string.key_timer_time))}")
+                }
+            }
+        })
+    }
+
+    //region 3rd layer functions
     private fun notifyTimerDone(totalTime: Long){
             val mContext = applicationContext
             val mBuilder = NotificationCompat.Builder(mContext, CHANNEL_ID)

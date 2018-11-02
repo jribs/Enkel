@@ -16,7 +16,8 @@ import com.inviscidlabs.enkel.R
 import com.inviscidlabs.enkel.viewmodel.TimerViewModel
 import kotlinx.android.synthetic.main.fragment_timer.*
 
-private const val ARG_TIME = "args_timeInMilliseconds"
+private const val ARG_FRAGTIMER_ID_TIMER = "args_timerID"
+private const val ARG_FRAGTIMER_TIME = "args_timeInMilliseconds"
 
 
 class TimerFragment: Fragment(){
@@ -24,6 +25,7 @@ class TimerFragment: Fragment(){
 
     lateinit var appContext: Context
     private var timerTime = 0L
+    private var timerID: Int = -1
     private var fragmentInterface: OnTimerFragmentResult? = null
     private lateinit var wrapper:ContextThemeWrapper
 
@@ -40,18 +42,13 @@ class TimerFragment: Fragment(){
             throw RuntimeException(this::class.java.simpleName)
         }
 
-        if(arguments?.containsKey(ARG_TIME)==null){
-            throw RuntimeException(this::class.java.simpleName + " must be created " +
-                    "using the newInstance constructor with a valid Long > 0")
-        } else {
-            timerTime = arguments!!.getLong(ARG_TIME)
-        }
-
         if(context is OnTimerFragmentResult){
             fragmentInterface = context
         } else {
             throw RuntimeException("${context.toString()} must implement OnTimerFragmentResult")
         }
+
+        extractArgumentsIfAvailable()
         super.onAttach(context)
     }
 
@@ -65,7 +62,7 @@ class TimerFragment: Fragment(){
 
         if(savedInstanceState==null) setInitialDrawableColors()
 
-        val factory = TimerViewModel.Factory(timerTime)
+        val factory = TimerViewModel.Factory(timerID, timerTime)
         val viewModel = ViewModelProviders.of(this, factory)
                 .get(TimerViewModel::class.java)
         observeTimeExpired((viewModel))
@@ -79,9 +76,27 @@ class TimerFragment: Fragment(){
         super.onDetach()
         fragmentInterface = null
     }
-//endregion
+    //endregion
 
 //region Top Layer Functions
+
+
+    private fun extractArgumentsIfAvailable() {
+        val hasTimerID = arguments?.containsKey(ARG_FRAGTIMER_ID_TIMER)
+        val hasTimeRemaining = arguments?.containsKey(ARG_FRAGTIMER_TIME)
+
+        if (hasTimerID == null || hasTimeRemaining==null) {
+            throwIncorrectArgumentsException()
+            return
+        } else if(hasTimeRemaining && hasTimerID) {
+            timerTime = arguments!!.getLong(ARG_FRAGTIMER_TIME)
+            timerID = arguments!!.getInt(ARG_FRAGTIMER_ID_TIMER)
+        } else {
+            throwIncorrectArgumentsException()
+            return
+        }
+
+    }
 
     private fun setupPlayButton(viewModel: TimerViewModel){
         button_playpause.setOnClickListener {
@@ -110,13 +125,17 @@ class TimerFragment: Fragment(){
         observePauseStatus(viewModel)
     }
 
-
 //endregion
 
 //region 2nd Layer Functions
 
+    private fun throwIncorrectArgumentsException() {
+        throw RuntimeException(this@TimerFragment::class.java.simpleName + " must be created " +
+                "using the newInstance constructor with a valid Long > 0")
+    }
+
     private fun observeTimeElapsed(viewModel: TimerViewModel){
-        viewModel.timeElapsed.observe(this, Observer{timeElapsed->
+        viewModel.timeRemaining.observe(this, Observer{ timeElapsed->
             time_text.text = timeElapsed!!.toString()
             setProgress(timeElapsed)
         })
@@ -148,7 +167,7 @@ class TimerFragment: Fragment(){
     }
     private fun setProgress(timeElapsed: Long) {
         if (timerTime > 0 && timeElapsed <= timerTime) {
-            progressBar.progress = timeElapsed.toInt() //((timeElapsed / timerTime*100).toInt())
+            progressBar.progress = timeElapsed.toInt() //((timeRemaining / timerTime*100).toInt())
         }
     }
     private fun setInitialDrawableColors(){
@@ -198,9 +217,10 @@ class TimerFragment: Fragment(){
 
     companion object {
         @JvmStatic
-        fun newInstance(timeInSeconds: Long) = TimerFragment().apply {
+        fun newInstance(timerID: Int, timeRemaining: Long) = TimerFragment().apply {
             arguments = Bundle().apply {
-                putLong(ARG_TIME, timeInSeconds)
+                putInt(ARG_FRAGTIMER_ID_TIMER, timerID)
+                putLong(ARG_FRAGTIMER_TIME, timeRemaining)
             }
         }
     }

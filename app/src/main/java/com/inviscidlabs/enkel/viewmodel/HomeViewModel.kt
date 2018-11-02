@@ -59,6 +59,10 @@ class HomeViewModel():ViewModel(){
                         loadTimers()
                         })
     }
+
+    fun timeUpdated(timerID: Long, timeInSeconds: Long){
+
+    }
 //endregion
 
 
@@ -90,6 +94,8 @@ class HomeViewModel():ViewModel(){
                 .subscribeOn(Schedulers.io())
                 .subscribe()
     }
+
+
 
     private fun isValidTimerID(savedTimerID: Int):Boolean {
         val timersWithSavedID = timers.value?.filter { it.timerID == savedTimerID }

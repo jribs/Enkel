@@ -22,9 +22,10 @@ class TimerSlidePagerAdapter(fragmentManager: FragmentManager, private val timer
     //Internal Functions
     private fun makeTimerFragment(position: Int): Fragment {
         timers ?: return NoDataFragment()
-        val timeInMS = timers[position].timeInMS
-        return if (timeInMS > 0) {
-            TimerFragment.newInstance(timeInMS)
+        val timerID = timers[position].timerID ?: 0
+        val timeLeft = timers[position].timeInMS ?: 0
+        return if (timerID > 0 || timeLeft > 0) {
+            TimerFragment.newInstance(timerID, timeLeft)
         } else {
             NoDataFragment()
         }
