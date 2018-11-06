@@ -4,20 +4,21 @@ import android.os.CountDownTimer
 
 abstract class EnkelTimer(private val millisInFuture: Long, private val countdownInterval: Long, val id: Long){
 
-    private var timeLeftInMillis = millisInFuture
+    private var _timeLeftInMillis = millisInFuture
     private var timer: CountDownTimer? = null
     private var _status: TimerStatus = TimerStatus.PAUSED
-    //TODO use for sorting timers val timeLeftInMilliseconds get() = timeLeftInMillis
+    //TODO use for sorting timers val timeLeftInMilliseconds get() = _timeLeftInMillis
 
     val status get() = _status
+    val timeLeftInMillis get() = _timeLeftInMillis
 
     private fun startTimerFromTimeLeft(){
-        timer = object: CountDownTimer(timeLeftInMillis, countdownInterval){
+        timer = object: CountDownTimer(_timeLeftInMillis, countdownInterval){
             override fun onFinish() {
                 this@EnkelTimer.onFinish()
             }
             override fun onTick(millisUntilFinished: Long) {
-                timeLeftInMillis = millisUntilFinished
+                _timeLeftInMillis = millisUntilFinished
                 this@EnkelTimer.onTick(millisUntilFinished)
             }
         }.start()
@@ -36,8 +37,8 @@ abstract class EnkelTimer(private val millisInFuture: Long, private val countdow
     //reset to initial time and broadcast new time without starting timer
     fun reset(){
         timer?.cancel()
-        timeLeftInMillis = millisInFuture
-        onTick(timeLeftInMillis)
+        _timeLeftInMillis = millisInFuture
+        onTick(_timeLeftInMillis)
         _status = TimerStatus.PAUSED
     }
 

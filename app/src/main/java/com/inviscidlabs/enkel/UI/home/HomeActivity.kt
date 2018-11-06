@@ -27,9 +27,6 @@ import com.inviscidlabs.enkel.ui.edit_timer.EditTimerActivity
 import com.inviscidlabs.enkel.ui.edit_timer.RESULT_EDIT_CANCELED
 import com.inviscidlabs.enkel.ui.edit_timer.RESULT_TIMER_SAVED
 import com.inviscidlabs.enkel.viewmodel.HomeViewModel
-import com.inviscidlabs.enkel.viewmodel.service.ACTION_PAUSE
-import com.inviscidlabs.enkel.viewmodel.service.ACTION_START_TIMER
-import com.inviscidlabs.enkel.viewmodel.service.ACTION_TIMER_UPDATED
 import com.inviscidlabs.enkel.viewmodel.service.EnkelTimerService
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.concurrent.atomic.AtomicInteger
@@ -63,9 +60,7 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult{
         observeTargetedTimerSelection()
     }
 
-
-
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+  override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.home_activity, menu)
         return super.onCreateOptionsMenu(menu)
     }
@@ -95,23 +90,8 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult{
         notifyTimerDone(totalTime)
     }
 
-    //TODO, make current Timer be a Timer Object easier implementation
-    override fun playClicked() {
-        val currentTimerIndex = viewModel.selectedTimerIndex.value ?: 0
-        val currentTimer = viewModel.timers.value?.get(currentTimerIndex) ?: return
-        val playServiceIntent = makeServiceIntentWithExtras(currentTimer)
-        playServiceIntent.action = ACTION_START_TIMER
-        startService(playServiceIntent)
-        registerBroadcastReceiver()
-    }
 
-    override fun pauseClicked() {
-        val currentTimerIndex = viewModel.selectedTimerIndex.value ?: 0
-        val currentTimer = viewModel.timers.value?.get(currentTimerIndex) ?: return
-        val pauseServiceIntent = makeServiceIntentWithExtras(currentTimer)
-        pauseServiceIntent.action = ACTION_PAUSE
-        startService(pauseServiceIntent)
-    }
+
 
     //endregion
 
@@ -174,23 +154,6 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult{
         viewModel.deleteTimerClicked()
     }
 
-    private fun registerBroadcastReceiver(){
-        val localBroadcastManager = LocalBroadcastManager.getInstance(this)
-        localBroadcastManager.registerReceiver(makeHomeActivityReceiver(), IntentFilter(ACTION_TIMER_UPDATED))
-
-    }
-
-    private fun makeHomeActivityReceiver(): BroadcastReceiver {
-        return (object: BroadcastReceiver(){
-            override fun onReceive(context: Context?, intent: Intent) {
-                //TODO time elapse
-                Log.e(TAG, "time Elapsed Intent Received")
-                if(intent.hasExtra(getString(R.string.key_timer_time))){
-                    Log.e(TAG, "${intent.extras.getLong(getString(R.string.key_timer_time))}")
-                }
-            }
-        })
-    }
 
     //region 3rd layer functions
     private fun notifyTimerDone(totalTime: Long){
@@ -225,7 +188,7 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult{
 
 //region Utilities
     private fun makeServiceIntentWithExtras(timer: TimerEntity): Intent{
-        val intent = Intent(this, EnkelTimerService::class.java).apply {
+        val intent = Intent(applicationContext, EnkelTimerService::class.java).apply {
             putExtra(getString(R.string.key_timer_id), timer.timerID?.toLong())
             putExtra(getString(R.string.key_timer_time), timer.timeInMS)
         }

@@ -1,5 +1,6 @@
 package com.inviscidlabs.enkel.ui.home
 
+import android.app.Application
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Context
@@ -8,6 +9,7 @@ import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.support.graphics.drawable.VectorDrawableCompat
 import android.support.v4.app.Fragment
+import android.support.v7.app.AppCompatActivity
 import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.View
@@ -24,6 +26,7 @@ class TimerFragment: Fragment(){
 
 
     lateinit var appContext: Context
+    lateinit var application: Application
     private var timerTime = 0L
     private var timerID: Int = -1
     private var fragmentInterface: OnTimerFragmentResult? = null
@@ -39,18 +42,16 @@ class TimerFragment: Fragment(){
             appContext = context.applicationContext
             wrapper = ContextThemeWrapper(appContext, R.style.AppTheme)
         } else {
-            throw RuntimeException(this::class.java.simpleName)
+            throw RuntimeException("${this::class.java.simpleName}: parent has no context")
         }
 
-        if(context is OnTimerFragmentResult){
-            fragmentInterface = context
-        } else {
-            throw RuntimeException("${context.toString()} must implement OnTimerFragmentResult")
-        }
-
-        extractArgumentsIfAvailable()
+        instantiateFragmentEventInterface(context)
+        instantiateAppObjectForViewModel()
+        extractBundledArgumentsIfAvailable()
         super.onAttach(context)
     }
+
+
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
@@ -61,8 +62,8 @@ class TimerFragment: Fragment(){
         super.onActivityCreated(savedInstanceState)
 
         if(savedInstanceState==null) setInitialDrawableColors()
-
-        val factory = TimerViewModel.Factory(timerID, timerTime)
+        val application = activity?.application ?: return
+        val factory = TimerViewModel.Factory(timerID, timerTime, application)
         val viewModel = ViewModelProviders.of(this, factory)
                 .get(TimerViewModel::class.java)
         observeTimeExpired((viewModel))
@@ -81,7 +82,7 @@ class TimerFragment: Fragment(){
 //region Top Layer Functions
 
 
-    private fun extractArgumentsIfAvailable() {
+    private fun extractBundledArgumentsIfAvailable() {
         val hasTimerID = arguments?.containsKey(ARG_FRAGTIMER_ID_TIMER)
         val hasTimeRemaining = arguments?.containsKey(ARG_FRAGTIMER_TIME)
 
@@ -95,20 +96,12 @@ class TimerFragment: Fragment(){
             throwIncorrectArgumentsException()
             return
         }
-
     }
 
     private fun setupPlayButton(viewModel: TimerViewModel){
         button_playpause.setOnClickListener {
             val isPaused = viewModel.isPaused.value ?: true
             viewModel.setPauseStatus(!isPaused)
-            with(fragmentInterface?: return@setOnClickListener){
-                if(isPaused){
-                    playClicked()
-                } else {
-                    pauseClicked()
-                }
-            }
         }
     }
 
@@ -116,7 +109,6 @@ class TimerFragment: Fragment(){
         button_reset.setOnClickListener {
             setResetDrawable()
             viewModel.resetTimer()
-            fragmentInterface?.pauseClicked()
         }
     }
 
@@ -128,6 +120,23 @@ class TimerFragment: Fragment(){
 //endregion
 
 //region 2nd Layer Functions
+
+    private fun instantiateFragmentEventInterface(context: Context) {
+        if (context is OnTimerFragmentResult) {
+            fragmentInterface = context
+        } else {
+            throw RuntimeException("${context.toString()} must implement OnTimerFragmentResult")
+        }
+    }
+
+    private fun instantiateAppObjectForViewModel() {
+        if (activity != null) {
+            application = (activity as AppCompatActivity).application
+        } else {
+            throw java.lang.RuntimeException("${this.javaClass.simpleName} needs a parent " +
+                    "activity to pass application to viewModel")
+        }
+    }
 
     private fun throwIncorrectArgumentsException() {
         throw RuntimeException(this@TimerFragment::class.java.simpleName + " must be created " +
@@ -174,6 +183,8 @@ class TimerFragment: Fragment(){
         setResetDrawable()
         setPlayDrawable()
     }
+
+
 //endregion
 
 
@@ -211,8 +222,6 @@ class TimerFragment: Fragment(){
 
     interface OnTimerFragmentResult{
         fun timerDone(totalTime: Long)
-        fun playClicked()
-        fun pauseClicked()
     }
 
     companion object {

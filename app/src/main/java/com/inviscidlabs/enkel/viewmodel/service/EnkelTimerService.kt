@@ -4,57 +4,48 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
-import android.arch.lifecycle.LiveData
-import android.arch.lifecycle.MutableLiveData
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
 import android.support.annotation.RequiresApi
 import android.support.v4.app.NotificationCompat
-import android.support.v4.content.LocalBroadcastManager
 import android.text.format.DateUtils
 import android.util.Log
 import com.inviscidlabs.enkel.EnkelTimer
 import com.inviscidlabs.enkel.R
-import com.inviscidlabs.enkel.custom.PlayRequestEvent
-import com.inviscidlabs.enkel.custom.RxEventBus
-import com.inviscidlabs.enkel.custom.TimerExpiredEvent
-import com.inviscidlabs.enkel.model.entity.TimerEntity
+import com.inviscidlabs.enkel.custom.*
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 
 //https://developer.android.com/guide/topics/media-apps/audio-app/building-a-mediabrowserservice#mediastyle-notifications
 //https://developer.android.com/guide/components/services#Foreground
 
-const val ACTION_PAUSE: String = "pauseTimerInService"
-const val ACTION_START_TIMER: String = "startTimerInService"
-const val ACTION_RESET: String = "resetTimerInService"
-const val ACTION_TIMER_UPDATED = "timerUpdated"
+
 
 class EnkelTimerService: Service(){
 
-    //Private mutables
-    private val _timers = MutableLiveData<List<EnkelTimer>>()
-
-    //Public Accessors
-    val timers: LiveData<List<EnkelTimer>> get() = _timers
-
-    val delete: LiveData<Boolean> = MutableLiveData<Boolean>()
     private val CHANNEL = "Enkel"
     private val NOTIF_ID = 6969
     private val TAG = this.javaClass.simpleName
-    private val activeTimers = mutableListOf<EnkelTimer>()
-    private var disposablePlayPause: Disposable? = null
+    private val GROUP_TICKING_TIMERS = "com.inviscidlabs.enkel.TICKING_TIMERS"
 
+    private val activeTimers = mutableListOf<EnkelTimer>()
+    private var isInForegroundHomeActivity = true
+
+    private var disposablePlayPause: Disposable? = null
+    private var disposableReset: Disposable? = null
+    private var disposableStatusRequest: Disposable? = null
+    private var disposableHomeActivityChange: Disposable? = null
 
 //region Service Functions
     override fun onCreate() {
         listenForPauseOrPlay()
+        listenForReset()
+        listenForTimerStatusRequest()
+        listenForHomeActivityStateChange()
+
         super.onCreate()
     }
-
 
     //startID = timer unique ID
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -62,7 +53,6 @@ class EnkelTimerService: Service(){
         if(pendingAction!=null && intentHasNecessaryData(intent)){
             when(pendingAction){
                 ACTION_START_TIMER -> startTimer(intent)
-                ACTION_PAUSE -> pauseTimer(intent)
             }
         }
         return super.onStartCommand(intent, flags, startId)
@@ -70,7 +60,6 @@ class EnkelTimerService: Service(){
 
     override fun onBind(intent: Intent?): IBinder? {
         //We are not interested in exposing functionality to other applications right now
-        //Will need when we use this as time broadcaster
         return null
     }
 
@@ -79,8 +68,8 @@ class EnkelTimerService: Service(){
 //region 2nd Layer Functions
     private fun startTimer(intent: Intent) {
         if(!intentHasNecessaryData(intent)) return
-        val timerID = intent.getLongExtra(getString(R.string.key_timer_id),-1L)
-        val timerTime = intent.getLongExtra(getString(R.string.key_timer_time), -1L)
+        val timerID = intent.getLongExtra(INTENT_TIMERID,-1L)
+        val timerTime = intent.getLongExtra(INTENT_TIMERTIME, -1L)
         val indexOfTimer = activeTimers.indexOfFirst {it.id == timerID}
         when(indexOfTimer){
             -1      -> startNewTimerWithArguments(timerTime, timerID)
@@ -95,56 +84,79 @@ class EnkelTimerService: Service(){
                     val requestedTimerIndex = activeTimers.indexOfFirst {timer->
                         timer.id == playPauseRequest.timerID.toLong()
                     }
-                    val pauseTimer = playPauseRequest.isPaused
                     activeTimers[requestedTimerIndex].apply {
-                        if(pauseTimer){
+                        val isPaused = (status == EnkelTimer.TimerStatus.PLAYING)
+                        if(isPaused){
                             pause()
                         } else {
                             start()
                         }
+                        RxEventBus.post(PlayPauseOutputEvent(id.toInt(),isPaused))
                     }
                 }
     }
 
-    private fun pauseTimer(intent: Intent) {
-        if(!intentHasNecessaryData(intent)) return
-        val timerID = intent.getLongExtra(getString(R.string.key_timer_id),-1)
-        val indexOfTimer = activeTimers.indexOfFirst { it.id ==timerID }
-        when(indexOfTimer){
-            -1      -> Log.e(TAG, "Couldn't find timer with ID=$timerID in list of running timers")
-            else    -> pauseExistingTimer(indexOfTimer)
+    private fun listenForReset() {
+        disposableReset = RxEventBus.subscribe<ResetTimerEvent>()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe{event ->
+                    val resetTimerIndex = activeTimers.indexOfFirst {it.id ==event.timerID.toLong()}
+                    activeTimers[resetTimerIndex].reset()
+                    RxEventBus.post(PlayPauseOutputEvent(event.timerID, true))
+                }
+    }
+
+    private fun listenForTimerStatusRequest(){
+        disposableStatusRequest = RxEventBus.subscribe<RequestTimerStatusEvent>()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { event ->
+                    val requestedTimerIndex = activeTimers.indexOfFirst { it.id == event.timerID.toLong() }
+                        if(requestedTimerIndex>-1) {
+                            with(activeTimers[requestedTimerIndex]) {
+                                val isPaused = (status==EnkelTimer.TimerStatus.PAUSED)
+                                RxEventBus.post(
+                                        ProvideTimerStatusEvent(id.toInt(), timeLeftInMillis, isPaused))
+                            }
+                        }
+                }
         }
-        if(activeTimers.size<1) stopForegroundService()
+
+    private fun listenForHomeActivityStateChange(){
+        disposableHomeActivityChange = RxEventBus.subscribe<HomeActivityForegroundEvent>()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe {
+                    if(it.isRunningInForeground){
+                        stopForeground(true)
+                    } else {
+                        activeTimers.forEach {timer ->
+                            startForeground(NOTIF_ID,
+                                    notificationFromRunningTimers(timer.timeLeftInMillis, timer.id))
+                        }
+                    }
+                    isInForegroundHomeActivity = it.isRunningInForeground
+                }
     }
 //endregion
 
 //region Bottom Layer Functions
     private fun startNewTimerWithArguments(timerTime: Long, timerID: Long) {
         val timer = createTimer(timerTime, timerID)
-        activeTimers.add(timer)
-        activeTimers.last().start()
+        with(activeTimers){
+            add(timer)
+            get(indexOfLast { it.id == timerID }).start()
+            RxEventBus.post(PlayPauseOutputEvent(timerID.toInt(), false))
+        }
     }
 
     private fun resumeTimerOfIndex(indexOfTimerToResume: Int){
         activeTimers[indexOfTimerToResume].start()
-        //TODO start ForegroundService
-    }
-
-    private fun pauseExistingTimer(indexOfTimerToPause: Int){
-        val timerToPause = activeTimers[indexOfTimerToPause]
-        with(timerToPause){
-            pause()
-            if(!hasPlayingTimers()){
-               stopForeground(true)
-            }
-        }
     }
 
     private fun intentHasNecessaryData(intentToAnalyze: Intent?): Boolean {
         intentToAnalyze ?: return falseWithNullIntentMessage()
-        val hasTimerTime = intentToAnalyze.hasExtra(getString(R.string.key_timer_time))
-        val hasTimerID = intentToAnalyze.hasExtra(getString(R.string.key_timer_id))
-        val argsAreValid = (hasTimerTime|| hasTimerID)
+        val hasTimerTime = intentToAnalyze.hasExtra(INTENT_TIMERTIME)
+        val hasTimerID = intentToAnalyze.hasExtra(INTENT_TIMERID)
+        val argsAreValid = (hasTimerTime && hasTimerID)
         return if(argsAreValid) {
             true
         } else {
@@ -167,22 +179,17 @@ class EnkelTimerService: Service(){
                 RxEventBus.post(TimerExpiredEvent(timerID_Int))
                 activeTimers.remove(this)
                 if (activeTimers.size<1){
-                    stopForegroundService()
+                    stopSelf()
                 }
             }
             override fun onTick(millisUntilFinished: Long) {
-                emitOnTick()
-                startForeground(timerID_Int, notificationFromTimeRemaining(millisUntilFinished, timerID))
-                sendTimeChangedBroadcast(timerID, millisUntilFinished)
+                RxEventBus.post(TimerTickRxEvent(timerID_Int, millisUntilFinished))
+                if(isInForegroundHomeActivity){
+                    startForeground(NOTIF_ID,
+                            notificationFromRunningTimers(millisUntilFinished, timerID))
+                }
             }
         }
-    }
-
-
-    private fun sendTimeChangedBroadcast(timerID: Long, timeUntilFinished: Long){
-        val newTimeBroadcast = Intent(ACTION_TIMER_UPDATED)
-        newTimeBroadcast.putExtra(getString(R.string.key_timer_time), timeUntilFinished)
-        LocalBroadcastManager.getInstance(this).sendBroadcast(newTimeBroadcast)
     }
 
     private fun falseWithNullIntentMessage():Boolean{
@@ -190,31 +197,17 @@ class EnkelTimerService: Service(){
         return false
     }
 
-    private fun hasPlayingTimers():Boolean{
-        val playingTimers = activeTimers.filter {timer->
-            timer.status == EnkelTimer.TimerStatus.PLAYING
-        }
-        return (playingTimers.isNotEmpty())
-    }
 
-    private fun deleteTimerNotification(timerID: Int) {
-        val notifManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notifManager.cancelAll()
-    }
-
-    private fun stopForegroundService(){
-        stopForeground(true)
-        stopSelf()
-    }
-
-    private fun notificationFromTimeRemaining(millisUntilFinished: Long, id: Long): Notification{
+    private fun notificationFromRunningTimers(millisUntilFinished: Long, id: Long): Notification{
         val notifChannel = if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.O){
             createNotificationChannel()
         } else {""}
 
-        val notifBuilder = NotificationCompat.Builder(this, notifChannel)
+        val timerUpdateNotification = NotificationCompat.Builder(this, notifChannel)
 
-        with(notifBuilder){
+
+        with(timerUpdateNotification){
+            setGroup(GROUP_TICKING_TIMERS)
             setSmallIcon(R.drawable.play)
             setStyle(NotificationCompat.BigTextStyle())
             setContentTitle(numberOfTimersRunningText())
@@ -222,10 +215,10 @@ class EnkelTimerService: Service(){
             setShowWhen(false)
             setAutoCancel(false)
             setChannelId(CHANNEL)
-            setSortKey(millisUntilFinished.toString())
-            setGroup(id.toString())
+            setSortKey(id.toString())
+
         }
-        return notifBuilder.build()
+        return timerUpdateNotification.build()
     }
 
     private fun numberOfTimersRunningText():String{

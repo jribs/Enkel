@@ -10,7 +10,7 @@ import io.reactivex.Single
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
 
-
+//Handles all data operations. Does not maintain active timers. That is for the Service
 class HomeViewModel():ViewModel(){
 
     private val TAG = this.javaClass.simpleName
@@ -58,10 +58,6 @@ class HomeViewModel():ViewModel(){
                         Log.e(TAG, "$it rows successfully deleted")
                         loadTimers()
                         })
-    }
-
-    fun timeUpdated(timerID: Long, timeInSeconds: Long){
-
     }
 //endregion
 
