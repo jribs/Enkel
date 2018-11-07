@@ -1,8 +1,7 @@
-package com.inviscidlabs.enkel
+package com.inviscidlabs.enkel.app
 
 import android.app.Application
 import android.arch.persistence.room.Room
-import com.inviscidlabs.enkel.custom.RxEventBus
 import com.inviscidlabs.enkel.model.EnkelDatabase
 
 class EnkelApp: Application(){

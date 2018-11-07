@@ -1,4 +1,4 @@
-package com.inviscidlabs.enkel
+package com.inviscidlabs.enkel.app
 
 import android.os.CountDownTimer
 
@@ -21,7 +21,8 @@ abstract class EnkelTimer(private val millisInFuture: Long, private val countdow
 
             }
             override fun onTick(millisUntilFinished: Long) {
-                if(timeLeftInMillis<=0L){ status==TimerStatus.FINISHED}
+                if(timeLeftInMillis<=0L){ status== TimerStatus.FINISHED
+                }
                 _timeLeftInMillis = millisUntilFinished
                 this@EnkelTimer.onTick(millisUntilFinished)
             }

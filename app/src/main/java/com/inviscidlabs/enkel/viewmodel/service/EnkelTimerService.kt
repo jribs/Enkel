@@ -12,9 +12,9 @@ import android.support.v4.app.NotificationCompat
 
 import android.text.format.DateUtils
 import android.util.Log
-import com.inviscidlabs.enkel.EnkelTimer
+import com.inviscidlabs.enkel.app.EnkelTimer
 import com.inviscidlabs.enkel.R
-import com.inviscidlabs.enkel.custom.*
+import com.inviscidlabs.enkel.app.*
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 
@@ -46,7 +46,6 @@ class EnkelTimerService: Service(){
         listenForTimerStatusRequest()
         listenForHomeActivityStateChange()
         listenForNewSelectedTimer()
-
         super.onCreate()
     }
 
@@ -116,7 +115,7 @@ class EnkelTimerService: Service(){
                     val requestedTimerIndex = activeTimers.indexOfFirst { it.id == event.timerID.toLong() }
                         if(requestedTimerIndex>-1) {
                             with(activeTimers[requestedTimerIndex]) {
-                                val isPaused = (status==EnkelTimer.TimerStatus.PAUSED)
+                                val isPaused = (status== EnkelTimer.TimerStatus.PAUSED)
                                 RxEventBus.post(
                                         ProvideTimerStatusEvent(id.toInt(), timeLeftInMillis, isPaused))
                             }
@@ -136,7 +135,6 @@ class EnkelTimerService: Service(){
                     isInForegroundHomeActivity = it.isRunningInForeground
                 }
     }
-
 
     private fun listenForNewSelectedTimer() {
         disposableNewSelectedTimer = RxEventBus.subscribe<NewTimerSelected>()
@@ -184,7 +182,7 @@ class EnkelTimerService: Service(){
 
 //region Utility Functions
 
-    private fun createTimer(timerTime: Long, timerID: Long):EnkelTimer{
+    private fun createTimer(timerTime: Long, timerID: Long): EnkelTimer {
         val timerID_Int = timerID.toInt()
         return object : EnkelTimer(
                 countdownInterval = 1000,
@@ -206,7 +204,6 @@ class EnkelTimerService: Service(){
             }
         }
     }
-
 
     private fun emitTimerStatusOfId(timerID: Int) {
         val timerFromArgs = activeTimers.getTimerWithID(timerID)

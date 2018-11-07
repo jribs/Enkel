@@ -1,12 +1,10 @@
-package com.inviscidlabs.enkel.ui.custom
+package com.inviscidlabs.enkel.ui.home.custom
 
 import android.content.Context
 import android.support.v4.view.ViewPager
 import android.util.AttributeSet
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
-import com.inviscidlabs.enkel.viewmodel.HomeViewModel
 
 //Reference is : https://stackoverflow.com/questions/13477820/android-vertical-viewpager
 

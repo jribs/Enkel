@@ -1,4 +1,4 @@
-package com.inviscidlabs.enkel.ui.custom
+package com.inviscidlabs.enkel.ui.home.custom
 
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager

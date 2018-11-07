@@ -3,14 +3,13 @@ package com.inviscidlabs.enkel.viewmodel
 import android.app.Application
 import android.arch.lifecycle.*
 import android.content.Intent
-import android.text.format.DateUtils
-import com.inviscidlabs.enkel.custom.*
+import com.inviscidlabs.enkel.app.*
 import com.inviscidlabs.enkel.viewmodel.service.EnkelTimerService
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 
 
-class TimerViewModel(private val timerID: Int, private val secondsToCountdown: Long, private val app: Application):
+class ActiveTimerViewModel(private val timerID: Int, private val secondsToCountdown: Long, private val app: Application):
         AndroidViewModel(app){
 
     private var disposableTick: Disposable? = null
@@ -127,6 +126,6 @@ class TimerViewModel(private val timerID: Int, private val secondsToCountdown: L
     class Factory(private val timerID: Int, private val totalTimeToCountdownInSeconds: Long,
                   private val app: Application): ViewModelProvider.Factory{
         override fun <T : ViewModel?> create(modelClass: Class<T>): T
-            = TimerViewModel(timerID, totalTimeToCountdownInSeconds, app) as T
+            = ActiveTimerViewModel(timerID, totalTimeToCountdownInSeconds, app) as T
     }
 }

@@ -16,7 +16,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.inviscidlabs.enkel.R
-import com.inviscidlabs.enkel.viewmodel.TimerViewModel
+import com.inviscidlabs.enkel.viewmodel.ActiveTimerViewModel
 import kotlinx.android.synthetic.main.fragment_timer.*
 
 private const val ARG_FRAGTIMER_ID_TIMER = "args_timerID"
@@ -55,18 +55,14 @@ class TimerFragment: Fragment(){
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
-        if(savedInstanceState==null) setInitialDrawableColors()
         val application = activity?.application ?: return
-        val factory = TimerViewModel.Factory(timerID, timerTime, application)
+        val factory = ActiveTimerViewModel.Factory(timerID, timerTime, application)
         val viewModel = ViewModelProviders.of(this, factory)
-                .get(TimerViewModel::class.java)
+                .get(ActiveTimerViewModel::class.java)
 
         observeTimeExpired((viewModel))
         observeTimeElapsed(viewModel)
-        observePauseStatus(viewModel)
 
-        setupPlayButton(viewModel)
-        setupResetButton(viewModel)
         progressBar.max = timerTime.toInt()
     }
 
@@ -94,21 +90,21 @@ class TimerFragment: Fragment(){
         }
     }
 
-    private fun setupPlayButton(viewModel: TimerViewModel){
-        button_playpause.setOnClickListener {
-            val isPaused = viewModel.isPaused.value ?: true
-            viewModel.setPauseStatus(!isPaused)
-        }
-    }
+//    private fun setupPlayButton(viewModel: ActiveTimerViewModel){
+//        button_playpause.setOnClickListener {
+//            val isPaused = viewModel.isPaused.value ?: true
+//            viewModel.setPauseStatus(!isPaused)
+//        }
+//    }
+//
+//    private fun setupResetButton(viewModel: ActiveTimerViewModel){
+//        button_reset.setOnClickListener {
+//            setResetDrawable()
+//            viewModel.resetTimer()
+//        }
+//    }
 
-    private fun setupResetButton(viewModel: TimerViewModel){
-        button_reset.setOnClickListener {
-            setResetDrawable()
-            viewModel.resetTimer()
-        }
-    }
-
-    private fun observeTimeElapsed(viewModel: TimerViewModel){
+    private fun observeTimeElapsed(viewModel: ActiveTimerViewModel){
         viewModel.timeRemaining.observe(this, Observer{ timeElapsed->
             if(timeElapsed!=null) {
                 time_text.text = DateUtils.formatElapsedTime(timeElapsed)
@@ -117,20 +113,11 @@ class TimerFragment: Fragment(){
         })
     }
 
-    private fun observePauseStatus(viewModel: TimerViewModel){
-        viewModel.isPaused.observe(this, Observer{ isPaused->
-            if(isPaused!=null){
-                adjustPlayPauseButton(isPaused)
-            }
-        })
-    }
-
-    private fun observeTimeExpired(viewModel: TimerViewModel){
+    private fun observeTimeExpired(viewModel: ActiveTimerViewModel){
         viewModel.timeIsExpired.observe(this, Observer {isExpired->
             if(isExpired!=null && isExpired){
                 fragmentInterface?.timerDone(timerTime)
                 viewModel.resetTimer()
-                setResetDrawable()
             }
         })
     }
@@ -161,20 +148,11 @@ class TimerFragment: Fragment(){
 
 
 
-    private fun adjustPlayPauseButton(isPaused: Boolean){
-        when(isPaused){
-            true -> setPlayDrawable()
-            else -> setPauseDrawable()
-        }
-    }
+
     private fun setProgress(timeElapsed: Long) {
         if (timerTime > 0 && timeElapsed <= timerTime) {
             progressBar.progress = timeElapsed.toInt() //((timeRemaining / timerTime*100).toInt())
         }
-    }
-    private fun setInitialDrawableColors(){
-        setResetDrawable()
-        setPlayDrawable()
     }
 
 
@@ -183,34 +161,10 @@ class TimerFragment: Fragment(){
 
 //region Bottom Layer Functions
 
-    private fun setPlayDrawable(){
-        button_playpause.apply {
-            setImageResource(R.drawable.anim_play_to_pause)
-            drawable.startAsAnimatable()
-        }
-    }
-
-    private fun setPauseDrawable(){
-        button_playpause.apply {
-            setImageResource(R.drawable.anim_pause_to_play)
-            drawable.startAsAnimatable()
-        }
-    }
-
-    private fun setResetDrawable(){
-        button_reset.apply {
-            setImageResource(R.drawable.anim_reset_twirl)
-            drawable.startAsAnimatable()
-        }
-    }
-
 
 //endregion
 
 //Utilities
-    private fun themedDrawable(drawableID: Int) = VectorDrawableCompat.create(resources, drawableID, wrapper.theme)
-
-    private fun Drawable.startAsAnimatable() = (this as Animatable).start()
 
 
     interface OnTimerFragmentResult{

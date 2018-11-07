@@ -1,4 +1,4 @@
-package com.inviscidlabs.enkel.custom
+package com.inviscidlabs.enkel.app
 
 data class TimerTickRxEvent(val timerID: Int, val timeRemainingInSeconds: Long)
 data class TimerExpiredEvent(val timerID: Int)

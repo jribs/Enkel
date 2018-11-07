@@ -1,8 +1,7 @@
-package com.inviscidlabs.enkel.custom
+package com.inviscidlabs.enkel.app
 
 import io.reactivex.Observable
 import io.reactivex.subjects.PublishSubject
-import java.util.*
 
 class RxEventBus(){
     companion object {

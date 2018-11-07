@@ -15,14 +15,14 @@
         <group android:name="@string/drawgroup_playpause_top">
             <path
                 android:name="@string/pathname_playpause_upper"
-                android:fillColor="@color/colorAccent"
+                android:fillColor="@color/contrastIconsAndText"
                 android:pathData="@string/pathdata_pause_icon_upper"/>
         </group>
 
         <group android:name="@string/drawgroup_playpause_bottom">
             <path
                 android:name="@string/pathname_playpause_bottom"
-                android:fillColor="@color/colorAccent"
+                android:fillColor="@color/contrastIconsAndText"
                 android:pathData="@string/pathdata_pause_icon_bottom"
                 />
         </group>

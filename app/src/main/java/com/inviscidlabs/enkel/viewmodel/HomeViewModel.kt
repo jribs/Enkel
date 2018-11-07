@@ -5,9 +5,9 @@ import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
 import android.util.Log
-import com.inviscidlabs.enkel.EnkelApp
-import com.inviscidlabs.enkel.custom.NewTimerSelected
-import com.inviscidlabs.enkel.custom.RxEventBus
+import com.inviscidlabs.enkel.app.EnkelApp
+import com.inviscidlabs.enkel.app.NewTimerSelected
+import com.inviscidlabs.enkel.app.RxEventBus
 import com.inviscidlabs.enkel.model.entity.TimerEntity
 import io.reactivex.Single
 import io.reactivex.rxkotlin.subscribeBy
