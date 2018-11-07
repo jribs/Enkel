@@ -1,10 +1,13 @@
 package com.inviscidlabs.enkel.viewmodel
 
+import android.annotation.SuppressLint
 import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
 import android.util.Log
 import com.inviscidlabs.enkel.EnkelApp
+import com.inviscidlabs.enkel.custom.NewTimerSelected
+import com.inviscidlabs.enkel.custom.RxEventBus
 import com.inviscidlabs.enkel.model.entity.TimerEntity
 import io.reactivex.Single
 import io.reactivex.rxkotlin.subscribeBy
@@ -32,9 +35,9 @@ class HomeViewModel():ViewModel(){
     }
 
 //region UI
-    fun timerSelectedFromViewPager(currentPosition: Int){
-        _selectedTimerIndex.value = currentPosition
-
+    fun timerSelectedFromViewPager(indexOfTimer: Int){
+        _selectedTimerIndex.value = indexOfTimer
+        emitNewTimerSelected(indexOfTimer)
     }
 
     fun timerSuccessfullySaved(savedTimerID: Int){
@@ -42,6 +45,7 @@ class HomeViewModel():ViewModel(){
         postNewTimerIndex(savedTimerID)
     }
 
+    @SuppressLint("CheckResult")
     fun deleteTimerClicked(){
         val currentIndex = _selectedTimerIndex.value ?: return
         val timerToDelete = _timers.value?.get(currentIndex) ?: return
@@ -61,8 +65,8 @@ class HomeViewModel():ViewModel(){
     }
 //endregion
 
-
 //region 2nd layer functions
+    @SuppressLint("CheckResult")
     private fun loadTimers(){
         Single.fromCallable {
             _timers.postValue(timerDao.getAllTimers())
@@ -75,6 +79,10 @@ class HomeViewModel():ViewModel(){
                         },
                         onSuccess = {
                         })
+    }
+
+    private fun emitNewTimerSelected(newTimerIndex: Int) {
+        RxEventBus.post(NewTimerSelected(_timers.value?.get(newTimerIndex)?.timerID ?: -1))
     }
 
     private fun postNewTimerIndex(savedTimerID: Int) {
@@ -91,16 +99,13 @@ class HomeViewModel():ViewModel(){
                 .subscribe()
     }
 
-
-
     private fun isValidTimerID(savedTimerID: Int):Boolean {
         val timersWithSavedID = timers.value?.filter { it.timerID == savedTimerID }
         when (timersWithSavedID?.size) {
-            0       -> Log.e(TAG, "No timers found in ViewModel List with id of $savedTimerID").also {
-                        return false}
+            0       -> return false.also {Log.e(TAG, "No timers found in ViewModel List with id of $savedTimerID")}
             1       -> return true
-            null    -> Log.e(TAG, "filter size is null").also { return false}
-            else    -> return false
+            null    -> return false.also {Log.e(TAG, "filter size is null")}
+            else    -> return true.also {Log.e(TAG, "More than one timer found with timerID of $savedTimerID")}
         }
         return true
     }

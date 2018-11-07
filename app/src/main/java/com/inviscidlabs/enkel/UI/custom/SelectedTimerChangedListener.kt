@@ -12,8 +12,10 @@ class SelectedTimerChangedListener(private val homeViewModel: HomeViewModel): Vi
     }
 
     override fun onPageSelected(position: Int) {
-        homeViewModel.timerSelectedFromViewPager(currentPosition = position)
+        homeViewModel.timerSelectedFromViewPager(indexOfTimer = position)
         //TODO delete
     }
+
+
 }
 

@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.support.graphics.drawable.VectorDrawableCompat
 import android.support.v4.app.Fragment
 import android.support.v7.app.AppCompatActivity
+import android.text.format.DateUtils
 import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.View
@@ -32,11 +33,7 @@ class TimerFragment: Fragment(){
     private var fragmentInterface: OnTimerFragmentResult? = null
     private lateinit var wrapper:ContextThemeWrapper
 
-    //Views
-
-
 //region Lifecycle functions
-
     override fun onAttach(context: Context?) {
         if(context!=null) {
             appContext = context.applicationContext
@@ -51,10 +48,7 @@ class TimerFragment: Fragment(){
         super.onAttach(context)
     }
 
-
-
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-
         return inflater.inflate(R.layout.fragment_timer, container, false)
     }
 
@@ -66,8 +60,11 @@ class TimerFragment: Fragment(){
         val factory = TimerViewModel.Factory(timerID, timerTime, application)
         val viewModel = ViewModelProviders.of(this, factory)
                 .get(TimerViewModel::class.java)
+
         observeTimeExpired((viewModel))
-        observeViewModel(viewModel)
+        observeTimeElapsed(viewModel)
+        observePauseStatus(viewModel)
+
         setupPlayButton(viewModel)
         setupResetButton(viewModel)
         progressBar.max = timerTime.toInt()
@@ -80,7 +77,6 @@ class TimerFragment: Fragment(){
     //endregion
 
 //region Top Layer Functions
-
 
     private fun extractBundledArgumentsIfAvailable() {
         val hasTimerID = arguments?.containsKey(ARG_FRAGTIMER_ID_TIMER)
@@ -112,15 +108,35 @@ class TimerFragment: Fragment(){
         }
     }
 
-    private fun observeViewModel(viewModel: TimerViewModel) {
-        observeTimeElapsed(viewModel)
-        observePauseStatus(viewModel)
+    private fun observeTimeElapsed(viewModel: TimerViewModel){
+        viewModel.timeRemaining.observe(this, Observer{ timeElapsed->
+            if(timeElapsed!=null) {
+                time_text.text = DateUtils.formatElapsedTime(timeElapsed)
+                setProgress(timeElapsed)
+            }
+        })
     }
 
+    private fun observePauseStatus(viewModel: TimerViewModel){
+        viewModel.isPaused.observe(this, Observer{ isPaused->
+            if(isPaused!=null){
+                adjustPlayPauseButton(isPaused)
+            }
+        })
+    }
+
+    private fun observeTimeExpired(viewModel: TimerViewModel){
+        viewModel.timeIsExpired.observe(this, Observer {isExpired->
+            if(isExpired!=null && isExpired){
+                fragmentInterface?.timerDone(timerTime)
+                viewModel.resetTimer()
+                setResetDrawable()
+            }
+        })
+    }
 //endregion
 
 //region 2nd Layer Functions
-
     private fun instantiateFragmentEventInterface(context: Context) {
         if (context is OnTimerFragmentResult) {
             fragmentInterface = context
@@ -143,30 +159,7 @@ class TimerFragment: Fragment(){
                 "using the newInstance constructor with a valid Long > 0")
     }
 
-    private fun observeTimeElapsed(viewModel: TimerViewModel){
-        viewModel.timeRemaining.observe(this, Observer{ timeElapsed->
-            time_text.text = timeElapsed!!.toString()
-            setProgress(timeElapsed)
-        })
-    }
 
-    private fun observePauseStatus(viewModel: TimerViewModel){
-        viewModel.isPaused.observe(this, Observer{ isPaused->
-            if(isPaused!=null){
-                adjustPlayPauseButton(isPaused)
-            }
-        })
-    }
-
-    private fun observeTimeExpired(viewModel: TimerViewModel){
-        viewModel.timeIsExpired.observe(this, Observer {isExpired->
-            if(isExpired!=null && isExpired){
-                fragmentInterface?.timerDone(timerTime)
-                viewModel.resetTimer()
-                setResetDrawable()
-            }
-        })
-    }
 
     private fun adjustPlayPauseButton(isPaused: Boolean){
         when(isPaused){

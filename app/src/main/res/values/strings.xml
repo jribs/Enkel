@@ -6,6 +6,11 @@
     <string name="menu_add_timer">Add Timer</string>
 
 
+    <!-- Notification -->
+    <string name="notif_otherTimers">other timers running</string>
+    <string name="notif_otherTimer">other timer running</string>
+    <string name="notif_timers_running">timers running</string>
+    <string name="notif_timer_running">timer running</string>
     <!-- Animation/Drawable Strings-->
 
 

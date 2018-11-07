@@ -19,6 +19,8 @@ import android.view.Menu
 import android.view.MenuItem
 import com.inviscidlabs.enkel.EnkelApp
 import com.inviscidlabs.enkel.R
+import com.inviscidlabs.enkel.custom.HomeActivityForegroundEvent
+import com.inviscidlabs.enkel.custom.RxEventBus
 import com.inviscidlabs.enkel.model.entity.TimerEntity
 import com.inviscidlabs.enkel.ui.custom.SelectedTimerChangedListener
 import com.inviscidlabs.enkel.ui.custom.TimerSlidePagerAdapter
@@ -54,16 +56,20 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult{
         setSupportActionBar(home_toolbar)
         setupPagerAdapter()
 
-        savedInstanceState ?: createNotificationChannel()
-
         observeTimers()
         observeTargetedTimerSelection()
     }
 
-  override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+    override fun onStart() {
+        super.onStart()
+        RxEventBus.post(HomeActivityForegroundEvent(true))
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.home_activity, menu)
         return super.onCreateOptionsMenu(menu)
     }
+
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         when(item?.itemId){
@@ -83,6 +89,11 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult{
         }
         super.onActivityResult(requestCode, resultCode, data)
     }
+
+    override fun onStop() {
+        RxEventBus.post(HomeActivityForegroundEvent(false))
+        super.onStop()
+    }
 //endregion
 
 //region Implemented Functions
@@ -100,7 +111,7 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult{
     private fun setupPagerAdapter() {
         val pagerAdapter = TimerSlidePagerAdapter(
                 fragmentManager = supportFragmentManager,
-                timers = viewModel?.timers?.value)
+                timers = viewModel.timers.value)
         with(pager){
             adapter = pagerAdapter
             addOnPageChangeListener(SelectedTimerChangedListener(viewModel))
@@ -141,11 +152,6 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult{
     }
 
     private fun respondToSavedTimer(returnedData: Intent) {
-        if(returnedData==null || returnedData.extras.getInt(ARG_TIMERID)==null){
-            Log.e(TAG, "No data returned from EditTimerActivity saved result")
-            return
-        }
-
         val returnedTimerID: Int = returnedData.extras.getInt(ARG_TIMERID)
         viewModel.timerSuccessfullySaved(savedTimerID = returnedTimerID)
     }
@@ -162,26 +168,12 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult{
             with(mBuilder){
                 setSmallIcon(R.drawable.play)
                 setContentTitle("Enkel TimerEntity Done")
-                setContentText("${totalTime} seconds is up")
+                setContentText("${totalTime} seconds are up")
                 setStyle(NotificationCompat.BigTextStyle().bigText("${totalTime} seconds is up"))
                 priority = NotificationCompat.PRIORITY_DEFAULT
                 setAutoCancel(true)
             }
             NotificationManagerCompat.from(mContext).notify(mNotificationID.incrementAndGet(), mBuilder.build())
-    }
-
-    private fun createNotificationChannel(){
-        if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.O){
-            val name = "Enkel"
-            val description = "TimerEntity"
-            val importance = NotificationManager.IMPORTANCE_HIGH
-            val notificationChannel = NotificationChannel(CHANNEL_ID, name, importance)
-            notificationChannel.description = description
-
-            val notificationManager: NotificationManager =
-                    getSystemService(NotificationManager::class.java)
-            notificationManager.createNotificationChannel(notificationChannel)
-        }
     }
 //endregion
 

@@ -31,7 +31,6 @@ class TimerViewModel(private val timerID: Int, private val secondsToCountdown: L
     init {
         listenForTimerStatus()
         _timeRemaining.value = secondsToCountdown
-        _isPaused.value=true
         if(_timeIsExpired.value==null){
             _timeIsExpired.value = false
         }
@@ -40,10 +39,6 @@ class TimerViewModel(private val timerID: Int, private val secondsToCountdown: L
         listenForTimerFinishedFromService()
         listenForPlayPauseStatus()
         emitRequestForTimerStatus()
-    }
-
-    private fun emitRequestForTimerStatus() {
-        RxEventBus.post(RequestTimerStatusEvent(timerID))
     }
 
     override fun onCleared() {
@@ -95,8 +90,16 @@ class TimerViewModel(private val timerID: Int, private val secondsToCountdown: L
                 .subscribe {
                     if(it.timerID == timerID){
                         _timeRemaining.postValue(it.timeRemainingInSeconds/1000)
+                        if(_isPaused.value !=it.isPaused){
+                            _isPaused.postValue(it.isPaused)
+                        }
                     }
                 }
+    }
+
+
+    private fun emitRequestForTimerStatus() {
+        RxEventBus.post(RequestTimerStatusEvent(timerID))
     }
 
     private fun listenForPlayPauseStatus(){

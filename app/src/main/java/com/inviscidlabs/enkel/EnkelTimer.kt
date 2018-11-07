@@ -9,15 +9,19 @@ abstract class EnkelTimer(private val millisInFuture: Long, private val countdow
     private var _status: TimerStatus = TimerStatus.PAUSED
     //TODO use for sorting timers val timeLeftInMilliseconds get() = _timeLeftInMillis
 
+    val isPaused get() = (status != TimerStatus.PLAYING)
     val status get() = _status
     val timeLeftInMillis get() = _timeLeftInMillis
 
     private fun startTimerFromTimeLeft(){
         timer = object: CountDownTimer(_timeLeftInMillis, countdownInterval){
             override fun onFinish() {
+
                 this@EnkelTimer.onFinish()
+
             }
             override fun onTick(millisUntilFinished: Long) {
+                if(timeLeftInMillis<=0L){ status==TimerStatus.FINISHED}
                 _timeLeftInMillis = millisUntilFinished
                 this@EnkelTimer.onTick(millisUntilFinished)
             }
@@ -46,6 +50,6 @@ abstract class EnkelTimer(private val millisInFuture: Long, private val countdow
     abstract fun onTick(millisUntilFinished: Long)
 
     enum class TimerStatus{
-        PLAYING, PAUSED
+        PLAYING, PAUSED, FINISHED
     }
 }

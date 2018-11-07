@@ -6,7 +6,7 @@ data class TimerExpiredEvent(val timerID: Int)
 data class ResetTimerEvent(val timerID: Int)
 
 data class HomeActivityForegroundEvent(val isRunningInForeground: Boolean)
-
+data class NewTimerSelected(val timerID: Int)
 
 data class PlayRequestEvent(val timerID: Int)
 data class PlayPauseOutputEvent(val timerID: Int, val isPaused: Boolean)
