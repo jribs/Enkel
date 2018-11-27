@@ -183,20 +183,20 @@ class EnkelTimerService: Service(){
 //region Utility Functions
 
     private fun createTimer(timerTime: Long, timerID: Long): EnkelTimer {
-        val timerID_Int = timerID.toInt()
+        val timerIDInt = timerID.toInt()
         return object : EnkelTimer(
                 countdownInterval = 1000,
                 millisInFuture = 1000 * timerTime,
                 id = timerID){
             override fun onFinish() {
                 //TODO Notification that we are done
-                RxEventBus.post(TimerExpiredEvent(timerID_Int))
+                RxEventBus.post(TimerExpiredEvent(timerIDInt))
                 notifyTimerDone(timerTime)
                 activeTimers.remove(this)
                 assessLifeCycle()
             }
             override fun onTick(millisUntilFinished: Long) {
-                RxEventBus.post(TimerTickRxEvent(timerID_Int, millisUntilFinished))
+                RxEventBus.post(TimerTickRxEvent(timerIDInt, millisUntilFinished))
                 if(!isInForegroundHomeActivity){
                     startForeground(NOTIF_ID,
                             notificationFromRunningTimers())

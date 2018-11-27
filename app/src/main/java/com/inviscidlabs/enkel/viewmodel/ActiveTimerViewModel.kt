@@ -96,7 +96,6 @@ class ActiveTimerViewModel(private val timerID: Int, private val secondsToCountd
                 }
     }
 
-
     private fun emitRequestForTimerStatus() {
         RxEventBus.post(RequestTimerStatusEvent(timerID))
     }

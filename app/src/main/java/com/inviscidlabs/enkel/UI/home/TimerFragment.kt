@@ -25,7 +25,6 @@ private const val ARG_FRAGTIMER_TIME = "args_timeInMilliseconds"
 
 class TimerFragment: Fragment(){
 
-
     lateinit var appContext: Context
     lateinit var application: Application
     private var timerTime = 0L
@@ -141,14 +140,6 @@ class TimerFragment: Fragment(){
         }
     }
 
-    private fun throwIncorrectArgumentsException() {
-        throw RuntimeException(this@TimerFragment::class.java.simpleName + " must be created " +
-                "using the newInstance constructor with a valid Long > 0")
-    }
-
-
-
-
     private fun setProgress(timeElapsed: Long) {
         if (timerTime > 0 && timeElapsed <= timerTime) {
             progressBar.progress = timeElapsed.toInt() //((timeRemaining / timerTime*100).toInt())
@@ -159,13 +150,11 @@ class TimerFragment: Fragment(){
 //endregion
 
 
-//region Bottom Layer Functions
-
-
-//endregion
-
 //Utilities
-
+    private fun throwIncorrectArgumentsException() {
+        throw RuntimeException(this@TimerFragment::class.java.simpleName + " must be created " +
+                "using the newInstance constructor with a valid Long > 0")
+    }
 
     interface OnTimerFragmentResult{
         fun timerDone(totalTime: Long)

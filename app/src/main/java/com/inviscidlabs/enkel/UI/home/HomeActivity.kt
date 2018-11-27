@@ -134,7 +134,7 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult{
     private fun startEditActivity(insertNewTimer: Boolean){
         var selectedTimerID: Int? = null
         if(!insertNewTimer){
-            selectedTimerID = viewModel.selectedTimerIndex.value
+            //TODO change to sleectedTiemrID selectedTimerID = viewModel.selectedTimerIndex.value
         }
 
         val startEditActivityIntent = Intent(this, EditTimerActivity::class.java).apply {
@@ -171,13 +171,10 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult{
 
 
 //region Utilities
-    private fun makeServiceIntentWithExtras(timer: TimerEntity): Intent{
-        val intent = Intent(applicationContext, EnkelTimerService::class.java).apply {
-            putExtra(getString(R.string.key_timer_id), timer.timerID?.toLong())
-            putExtra(getString(R.string.key_timer_time), timer.timeInMS)
-        }
-        return intent
-    }
+
+
+
+//endregion
 
 
 
