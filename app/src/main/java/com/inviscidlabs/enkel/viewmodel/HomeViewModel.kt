@@ -1,10 +1,7 @@
 package com.inviscidlabs.enkel.viewmodel
 
 import android.app.Application
-import android.arch.lifecycle.AndroidViewModel
-import android.arch.lifecycle.LiveData
-import android.arch.lifecycle.MutableLiveData
-import android.arch.lifecycle.ViewModel
+import android.arch.lifecycle.*
 import android.content.Intent
 import android.util.Log
 import com.inviscidlabs.enkel.app.*
@@ -18,7 +15,7 @@ import io.reactivex.schedulers.Schedulers
 
 //Handles all data operations and active timer changes.
 // Does not maintain active timers. That is for the Service
-class HomeViewModel(app: Application): AndroidViewModel(app){
+class HomeViewModel(private val app: Application): AndroidViewModel(app){
 
     private val TAG = this.javaClass.simpleName
     private val timerDao = EnkelApp.CURRENT_DB_INSTANCE.timerDao()
@@ -44,7 +41,13 @@ class HomeViewModel(app: Application): AndroidViewModel(app){
         listenForPlayPauseStatus()
     }
 
-//region UI
+    override fun onCleared() {
+        disposablePlayPauseChange?.dispose()
+        disposableTimerStatusChange?.dispose()
+        super.onCleared()
+    }
+
+    //region UI
     fun timerSelectedFromViewPager(indexOfTimer: Int){
         currentTimerID = _timers.value?.get(indexOfTimer)?.timerID ?: -1
         emitNewTimerSelected(indexOfTimer)
@@ -80,6 +83,7 @@ class HomeViewModel(app: Application): AndroidViewModel(app){
     }
 
     fun playPauseClicked(){
+        startNewTimerInService()
         RxEventBus.post(PlayRequestEvent(timerID = currentTimerID))
     }
 
@@ -161,9 +165,15 @@ class HomeViewModel(app: Application): AndroidViewModel(app){
     private fun startNewTimerInService(isPaused: Boolean){
         val playPauseIntent = Intent(app.applicationContext, EnkelTimerService::class.java).apply {
             putExtra(INTENT_TIMERID, currentTimerID.toLong())
-            putExtra(INTENT_TIMERTIME, secondsToCountdown)
+            putExtra(INTENT_TIMERTIME, _timers.getIndexFromID(currentTimerID)?.timeInMS ?: -1)
             action = ACTION_START_TIMER
         }
         app.applicationContext.startService(playPauseIntent)
+    }
+
+
+    class Factory(private val app: Application): ViewModelProvider.Factory{
+        override fun <T : ViewModel?> create(modelClass: Class<T>): T
+                = HomeViewModel(app) as T
     }
 }

@@ -29,7 +29,9 @@ class ControlsFragment(): Fragment() {
     override fun onAttach(context: Context?) {
         super.onAttach(context)
         if(context!=null || context is FragmentActivity){
-            viewModel = ViewModelProviders.of((context as FragmentActivity)).get(HomeViewModel::class.java)
+            viewModel = ViewModelProviders
+                    .of((context as FragmentActivity), HomeViewModel.Factory(context.application))
+                    .get(HomeViewModel::class.java)
         } else {
             throw RuntimeException("$TAG: Parent of this fragment is not FragmentActivity. Cannot instantiate required variables")
         }

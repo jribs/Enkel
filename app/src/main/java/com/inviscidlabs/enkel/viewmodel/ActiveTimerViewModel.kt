@@ -15,16 +15,13 @@ class ActiveTimerViewModel(private val timerID: Int, private val secondsToCountd
     private var disposableTick: Disposable? = null
     private var disposableFinished: Disposable? = null
     private var disposableTimerStatus: Disposable? = null
-    private var disposablePlayPause: Disposable? = null
 
     //Mutable, local variables
      private val _timeRemaining = MutableLiveData<Long>()
-     private val _isPaused = MutableLiveData<Boolean>()
      private val _timeIsExpired = MutableLiveData<Boolean>()
 
     //Immutable public variables
     val timeRemaining: LiveData<Long> get() = _timeRemaining
-    val isPaused: LiveData<Boolean> get() = _isPaused
     val timeIsExpired: LiveData<Boolean> get() = _timeIsExpired
 
     init {
@@ -36,7 +33,6 @@ class ActiveTimerViewModel(private val timerID: Int, private val secondsToCountd
         _timeRemaining.postValue(secondsToCountdown)
         listenForTickFromService()
         listenForTimerFinishedFromService()
-        listenForPlayPauseStatus()
         emitRequestForTimerStatus()
     }
 
@@ -46,20 +42,9 @@ class ActiveTimerViewModel(private val timerID: Int, private val secondsToCountd
         super.onCleared()
     }
 
-//region UI
-    //TODO remove setting isPaused. Change only when broadcast received
-    fun setPauseStatus(isPaused: Boolean){
-        if (secondsToCountdown == _timeRemaining.value && !isPaused) {
-            startNewTimerInService(isPaused)
-        } else {
-            RxEventBus.post(PlayRequestEvent(timerID = timerID))
-        }
+    fun resetTimerTime(){
+        _timeRemaining.value = secondsToCountdown
     }
-
-    fun resetTimer(){
-        RxEventBus.post(ResetTimerEvent(timerID))
-    }
-//endregion
 
 //region 2nd layer functions
     //TODO observe only on thread specified by timerID
@@ -89,9 +74,6 @@ class ActiveTimerViewModel(private val timerID: Int, private val secondsToCountd
                 .subscribe {
                     if(it.timerID == timerID){
                         _timeRemaining.postValue(it.timeRemainingInSeconds/1000)
-                        if(_isPaused.value !=it.isPaused){
-                            _isPaused.postValue(it.isPaused)
-                        }
                     }
                 }
     }
@@ -100,31 +82,6 @@ class ActiveTimerViewModel(private val timerID: Int, private val secondsToCountd
         RxEventBus.post(RequestTimerStatusEvent(timerID))
     }
 
-    private fun listenForPlayPauseStatus(){
-        disposablePlayPause = RxEventBus.subscribe<PlayPauseOutputEvent>()
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe{
-                    if(it.timerID==timerID){
-                        _isPaused.postValue(it.isPaused)
-                    }
-                }
-    }
 //endregion
 
-//region Utility Functions
-    private fun startNewTimerInService(isPaused: Boolean){
-        val playPauseIntent = Intent(app.applicationContext, EnkelTimerService::class.java).apply {
-            putExtra(INTENT_TIMERID, timerID.toLong())
-            putExtra(INTENT_TIMERTIME, secondsToCountdown)
-            action = ACTION_START_TIMER
-        }
-        app.applicationContext.startService(playPauseIntent)
-    }
-//endregion
-
-    class Factory(private val timerID: Int, private val totalTimeToCountdownInSeconds: Long,
-                  private val app: Application): ViewModelProvider.Factory{
-        override fun <T : ViewModel?> create(modelClass: Class<T>): T
-            = ActiveTimerViewModel(timerID, totalTimeToCountdownInSeconds, app) as T
-    }
 }

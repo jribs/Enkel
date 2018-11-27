@@ -36,13 +36,14 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult{
 
     //TODO store in ViewModel or savedState
     private val mNotificationID = AtomicInteger(0)
-    private val viewModel: HomeViewModel by lazy {
-        ViewModelProviders.of(this).get(HomeViewModel::class.java) }
+    private lateinit var viewModel: HomeViewModel
 
 
 //region Lifecycle Functions
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        viewModel = ViewModelProviders.of(this, HomeViewModel.Factory(application))
+                .get(HomeViewModel::class.java)
 
         setContentView(R.layout.activity_main)
         setSupportActionBar(home_toolbar)
