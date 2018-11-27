@@ -1,5 +1,7 @@
 package com.inviscidlabs.enkel.viewmodel
 
+import android.app.Application
+import android.arch.lifecycle.AndroidViewModel
 import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
@@ -16,7 +18,7 @@ import io.reactivex.schedulers.Schedulers
 
 //Handles all data operations and active timer changes.
 // Does not maintain active timers. That is for the Service
-class HomeViewModel():ViewModel(){
+class HomeViewModel(app: Application): AndroidViewModel(app){
 
     private val TAG = this.javaClass.simpleName
     private val timerDao = EnkelApp.CURRENT_DB_INSTANCE.timerDao()
