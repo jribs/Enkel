@@ -9,8 +9,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 
 
-class ActiveTimerViewModel(private val timerID: Int, private val secondsToCountdown: Long, private val app: Application):
-        AndroidViewModel(app){
+class ActiveTimerViewModel(private val timerID: Int, private val secondsToCountdown: Long): ViewModel() {
 
     private var disposableTick: Disposable? = null
     private var disposableFinished: Disposable? = null
@@ -53,7 +52,7 @@ class ActiveTimerViewModel(private val timerID: Int, private val secondsToCountd
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe {
                     if(it.timerID==timerID){
-                        _timeRemaining.postValue(it.timeRemainingInSeconds)
+                        _timeRemaining.postValue(it.timeRemainingInSeconds/1000)
                     }
                 }
     }
@@ -84,4 +83,8 @@ class ActiveTimerViewModel(private val timerID: Int, private val secondsToCountd
 
 //endregion
 
+    class Factory(private val timerID: Int, private val secondsToCountdown: Long): ViewModelProvider.Factory{
+        override fun <T : ViewModel?> create(modelClass: Class<T>): T
+                = ActiveTimerViewModel(timerID, secondsToCountdown) as T
+    }
 }

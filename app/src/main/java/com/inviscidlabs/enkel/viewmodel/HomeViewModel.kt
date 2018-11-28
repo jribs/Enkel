@@ -7,6 +7,8 @@ import android.util.Log
 import com.inviscidlabs.enkel.app.*
 import com.inviscidlabs.enkel.model.entity.TimerEntity
 import com.inviscidlabs.enkel.viewmodel.service.EnkelTimerService
+import io.reactivex.Observable
+import io.reactivex.Observer
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
@@ -83,24 +85,41 @@ class HomeViewModel(private val app: Application): AndroidViewModel(app){
     }
 
     fun playPauseClicked(){
-        startNewTimerInService()
-        RxEventBus.post(PlayRequestEvent(timerID = currentTimerID))
+        if (_currentTimerIsPaused.value != false) {
+            togglePlayInService()
+        } else {
+            RxEventBus.post(PlayRequestEvent(timerID = currentTimerID))
+        }
     }
-
-
 //endregion
 
 //region 2nd layer functions
-    private fun loadTimers(){
-        Single.fromCallable {
+    private fun loadTimers() {
+        val loadTimerTask: Observable<Unit> = Observable.fromCallable {
             _timers.postValue(timerDao.getAllTimers())
 
         }
+
+        val tasksLoadedObserver: Observer<Unit> = object : Observer<Unit> {
+            override fun onComplete() {
+                currentTimerID = _timers.value?.get(0)?.timerID ?: -1
+            }
+            override fun onSubscribe(d: Disposable) { //TODO broadcast loading
+            }
+
+            override fun onNext(t: Unit) {}
+            override fun onError(e: Throwable) {
+                Log.e(TAG, e.localizedMessage)
+            }
+        }
+
+        loadTimerTask
                 .subscribeOn(Schedulers.io())
-                .subscribeBy(
-                        onError = {throwable->
-                            Log.e(TAG, throwable.localizedMessage)
-                        })
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(tasksLoadedObserver)
+
+        //TODO load from SharedPrefs
+
     }
 
     private fun emitNewTimerSelected(newTimerIndex: Int) {
@@ -160,9 +179,8 @@ class HomeViewModel(private val app: Application): AndroidViewModel(app){
     }
 //endregion
 
-
     //region Utility Functions
-    private fun startNewTimerInService(isPaused: Boolean){
+    private fun togglePlayInService(){
         val playPauseIntent = Intent(app.applicationContext, EnkelTimerService::class.java).apply {
             putExtra(INTENT_TIMERID, currentTimerID.toLong())
             putExtra(INTENT_TIMERTIME, _timers.getIndexFromID(currentTimerID)?.timeInMS ?: -1)
@@ -170,7 +188,6 @@ class HomeViewModel(private val app: Application): AndroidViewModel(app){
         }
         app.applicationContext.startService(playPauseIntent)
     }
-
 
     class Factory(private val app: Application): ViewModelProvider.Factory{
         override fun <T : ViewModel?> create(modelClass: Class<T>): T

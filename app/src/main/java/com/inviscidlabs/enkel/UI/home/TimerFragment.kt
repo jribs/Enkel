@@ -24,8 +24,7 @@ class TimerFragment: Fragment(){
     private var timerTime = 0L
     private var timerID: Int = -1
     private var fragmentInterface: OnTimerFragmentResult? = null
-    private val viewModel by lazy { ViewModelProviders.of(this)
-            .get(ActiveTimerViewModel::class.java) }
+    private lateinit var viewModel: ActiveTimerViewModel
 
 //region Lifecycle functions
     override fun onAttach(context: Context?) {
@@ -36,6 +35,9 @@ class TimerFragment: Fragment(){
         }
 
         extractBundledArgumentsIfAvailable()
+        viewModel = ViewModelProviders
+                .of(this, ActiveTimerViewModel.Factory(timerID, timerTime))
+                .get(ActiveTimerViewModel::class.java)
         super.onAttach(context)
     }
 
@@ -56,7 +58,7 @@ class TimerFragment: Fragment(){
         super.onDetach()
         fragmentInterface = null
     }
-    //endregion
+//endregion
 
 //region Top Layer Functions
 
@@ -110,7 +112,6 @@ class TimerFragment: Fragment(){
         }
     }
 //endregion
-
 
 //Utilities
     private fun throwIncorrectArgumentsException() {

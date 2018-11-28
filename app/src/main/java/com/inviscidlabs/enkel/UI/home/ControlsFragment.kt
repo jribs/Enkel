@@ -54,6 +54,7 @@ class ControlsFragment(): Fragment() {
     private fun setupResetButton(){
         button_reset.setOnClickListener {
             viewModel.resetClicked()
+            animateResetButton()
         }
     }
 
@@ -80,17 +81,21 @@ class ControlsFragment(): Fragment() {
             setFabState(isPaused ?: return@Observer, false)
         })
     }
-//endregion
 
 //region UI
     private fun setFabState(timerIsPaused: Boolean, animateButtons: Boolean){
-        if (timerIsPaused){
-            fab_play_pause.setImageResource(R.drawable.anim_pause_to_play)
-
-        } else {
-            fab_play_pause.setImageResource(R.drawable.anim_play_to_pause)
+        fab_play_pause.apply {
+            when (timerIsPaused) {
+                true -> setImageResource(R.drawable.anim_play_to_pause)
+                false ->setImageResource(R.drawable.anim_pause_to_play)
+            }
         }
         if(animateButtons) (fab_play_pause.drawable as Animatable).start()
+    }
+
+    //endregion
+    private fun animateResetButton() {
+        
     }
 
 //endregion

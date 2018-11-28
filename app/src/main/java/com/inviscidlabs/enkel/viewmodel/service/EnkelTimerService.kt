@@ -75,7 +75,7 @@ class EnkelTimerService: Service(){
         val indexOfTimer = activeTimers.indexOfFirst {it.id == timerID}
         when(indexOfTimer){
             -1      -> startNewTimerWithArguments(timerTime, timerID)
-            else    -> resumeTimerOfIndex(indexOfTimer)
+            else    -> toggleTimerOfIndex(indexOfTimer)
         }
     }
 
@@ -160,8 +160,14 @@ class EnkelTimerService: Service(){
         }
     }
 
-    private fun resumeTimerOfIndex(indexOfTimerToResume: Int){
-        activeTimers[indexOfTimerToResume].start()
+    private fun toggleTimerOfIndex(indexOfTimerToToggle: Int){
+        activeTimers[indexOfTimerToToggle].apply {
+            when(isPaused){
+                true    -> start()
+                false   -> pause()
+            }
+            RxEventBus.post(PlayPauseOutputEvent(id.toInt(), isPaused))
+        }
     }
 
     private fun intentHasNecessaryData(intentToAnalyze: Intent?): Boolean {
