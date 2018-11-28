@@ -1,4 +1,4 @@
-package com.inviscidlabs.enkel.custom
+package com.inviscidlabs.enkel.app
 
 //These are NON TRANSLATABLE constants. All other strings should be stored in strings.xml
 

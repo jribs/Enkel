@@ -1,4 +1,4 @@
-package com.inviscidlabs.enkel.ui.custom
+package com.inviscidlabs.enkel.ui.home.custom
 
 import android.support.v4.view.ViewPager
 import com.inviscidlabs.enkel.viewmodel.HomeViewModel

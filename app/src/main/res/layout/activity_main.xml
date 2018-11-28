@@ -13,30 +13,28 @@
         android:background="@color/colorPrimary"
         android:elevation="4dp"
         android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
-        app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
-
-
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+        >
     </android.support.v7.widget.Toolbar>
 
-    <FrameLayout
-        android:id="@+id/container"
+    <com.inviscidlabs.enkel.ui.home.custom.VerticalTimerViewPager
+        android:id="@+id/pager"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/fragment"
+        app:layout_constraintHeight_percent="0.6"
+        app:layout_constraintTop_toBottomOf="@+id/home_toolbar">
+        <!--TODO Title strip or vertical indicator-->
+    </com.inviscidlabs.enkel.ui.home.custom.VerticalTimerViewPager>
+
+    <fragment
+        android:id="@+id/fragment"
+        android:name="com.inviscidlabs.enkel.ui.home.ControlsFragment"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
         android:layout_marginBottom="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/home_toolbar" />
-
-    <com.inviscidlabs.enkel.ui.custom.VerticalTimerViewPager
-        android:id="@+id/pager"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/home_toolbar"
-        >
-
-        <!--TODO Title strip or vertical indicator-->
-
-    </com.inviscidlabs.enkel.ui.custom.VerticalTimerViewPager>
+        app:layout_constraintHeight_percent="0.25" />
 
 </android.support.constraint.ConstraintLayout>

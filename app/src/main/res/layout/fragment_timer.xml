@@ -44,6 +44,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+
     <Button
         android:id="@+id/button_reset"
         android:layout_width="0dp"
@@ -90,6 +91,5 @@
         app:layout_constraintWidth_percent="0.35"
         android:gravity="center"
         />
-
 
 </android.support.constraint.ConstraintLayout>

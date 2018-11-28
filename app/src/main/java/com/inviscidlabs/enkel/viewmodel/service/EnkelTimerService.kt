@@ -12,9 +12,9 @@ import android.support.v4.app.NotificationCompat
 
 import android.text.format.DateUtils
 import android.util.Log
-import com.inviscidlabs.enkel.EnkelTimer
+import com.inviscidlabs.enkel.app.EnkelTimer
 import com.inviscidlabs.enkel.R
-import com.inviscidlabs.enkel.custom.*
+import com.inviscidlabs.enkel.app.*
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 
@@ -46,7 +46,6 @@ class EnkelTimerService: Service(){
         listenForTimerStatusRequest()
         listenForHomeActivityStateChange()
         listenForNewSelectedTimer()
-
         super.onCreate()
     }
 
@@ -76,7 +75,7 @@ class EnkelTimerService: Service(){
         val indexOfTimer = activeTimers.indexOfFirst {it.id == timerID}
         when(indexOfTimer){
             -1      -> startNewTimerWithArguments(timerTime, timerID)
-            else    -> resumeTimerOfIndex(indexOfTimer)
+            else    -> toggleTimerOfIndex(indexOfTimer)
         }
     }
 
@@ -116,7 +115,7 @@ class EnkelTimerService: Service(){
                     val requestedTimerIndex = activeTimers.indexOfFirst { it.id == event.timerID.toLong() }
                         if(requestedTimerIndex>-1) {
                             with(activeTimers[requestedTimerIndex]) {
-                                val isPaused = (status==EnkelTimer.TimerStatus.PAUSED)
+                                val isPaused = (status== EnkelTimer.TimerStatus.PAUSED)
                                 RxEventBus.post(
                                         ProvideTimerStatusEvent(id.toInt(), timeLeftInMillis, isPaused))
                             }
@@ -136,7 +135,6 @@ class EnkelTimerService: Service(){
                     isInForegroundHomeActivity = it.isRunningInForeground
                 }
     }
-
 
     private fun listenForNewSelectedTimer() {
         disposableNewSelectedTimer = RxEventBus.subscribe<NewTimerSelected>()
@@ -162,8 +160,14 @@ class EnkelTimerService: Service(){
         }
     }
 
-    private fun resumeTimerOfIndex(indexOfTimerToResume: Int){
-        activeTimers[indexOfTimerToResume].start()
+    private fun toggleTimerOfIndex(indexOfTimerToToggle: Int){
+        activeTimers[indexOfTimerToToggle].apply {
+            when(isPaused){
+                true    -> start()
+                false   -> pause()
+            }
+            RxEventBus.post(PlayPauseOutputEvent(id.toInt(), isPaused))
+        }
     }
 
     private fun intentHasNecessaryData(intentToAnalyze: Intent?): Boolean {
@@ -184,21 +188,21 @@ class EnkelTimerService: Service(){
 
 //region Utility Functions
 
-    private fun createTimer(timerTime: Long, timerID: Long):EnkelTimer{
-        val timerID_Int = timerID.toInt()
+    private fun createTimer(timerTime: Long, timerID: Long): EnkelTimer {
+        val timerIDInt = timerID.toInt()
         return object : EnkelTimer(
                 countdownInterval = 1000,
                 millisInFuture = 1000 * timerTime,
                 id = timerID){
             override fun onFinish() {
                 //TODO Notification that we are done
-                RxEventBus.post(TimerExpiredEvent(timerID_Int))
+                RxEventBus.post(TimerExpiredEvent(timerIDInt))
                 notifyTimerDone(timerTime)
                 activeTimers.remove(this)
                 assessLifeCycle()
             }
             override fun onTick(millisUntilFinished: Long) {
-                RxEventBus.post(TimerTickRxEvent(timerID_Int, millisUntilFinished))
+                RxEventBus.post(TimerTickRxEvent(timerIDInt, millisUntilFinished))
                 if(!isInForegroundHomeActivity){
                     startForeground(NOTIF_ID,
                             notificationFromRunningTimers())
@@ -206,7 +210,6 @@ class EnkelTimerService: Service(){
             }
         }
     }
-
 
     private fun emitTimerStatusOfId(timerID: Int) {
         val timerFromArgs = activeTimers.getTimerWithID(timerID)

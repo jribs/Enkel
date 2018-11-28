@@ -4,19 +4,15 @@ import android.app.Application
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Context
-import android.graphics.drawable.Animatable
-import android.graphics.drawable.Drawable
 import android.os.Bundle
-import android.support.graphics.drawable.VectorDrawableCompat
 import android.support.v4.app.Fragment
-import android.support.v7.app.AppCompatActivity
 import android.text.format.DateUtils
 import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.inviscidlabs.enkel.R
-import com.inviscidlabs.enkel.viewmodel.TimerViewModel
+import com.inviscidlabs.enkel.viewmodel.ActiveTimerViewModel
 import kotlinx.android.synthetic.main.fragment_timer.*
 
 private const val ARG_FRAGTIMER_ID_TIMER = "args_timerID"
@@ -25,26 +21,23 @@ private const val ARG_FRAGTIMER_TIME = "args_timeInMilliseconds"
 
 class TimerFragment: Fragment(){
 
-
-    lateinit var appContext: Context
-    lateinit var application: Application
     private var timerTime = 0L
     private var timerID: Int = -1
     private var fragmentInterface: OnTimerFragmentResult? = null
-    private lateinit var wrapper:ContextThemeWrapper
+    private lateinit var viewModel: ActiveTimerViewModel
 
 //region Lifecycle functions
     override fun onAttach(context: Context?) {
         if(context!=null) {
-            appContext = context.applicationContext
-            wrapper = ContextThemeWrapper(appContext, R.style.AppTheme)
+            instantiateFragmentEventInterface(context)
         } else {
             throw RuntimeException("${this::class.java.simpleName}: parent has no context")
         }
 
-        instantiateFragmentEventInterface(context)
-        instantiateAppObjectForViewModel()
         extractBundledArgumentsIfAvailable()
+        viewModel = ViewModelProviders
+                .of(this, ActiveTimerViewModel.Factory(timerID, timerTime))
+                .get(ActiveTimerViewModel::class.java)
         super.onAttach(context)
     }
 
@@ -55,18 +48,9 @@ class TimerFragment: Fragment(){
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
-        if(savedInstanceState==null) setInitialDrawableColors()
-        val application = activity?.application ?: return
-        val factory = TimerViewModel.Factory(timerID, timerTime, application)
-        val viewModel = ViewModelProviders.of(this, factory)
-                .get(TimerViewModel::class.java)
-
         observeTimeExpired((viewModel))
         observeTimeElapsed(viewModel)
-        observePauseStatus(viewModel)
 
-        setupPlayButton(viewModel)
-        setupResetButton(viewModel)
         progressBar.max = timerTime.toInt()
     }
 
@@ -74,7 +58,7 @@ class TimerFragment: Fragment(){
         super.onDetach()
         fragmentInterface = null
     }
-    //endregion
+//endregion
 
 //region Top Layer Functions
 
@@ -94,21 +78,7 @@ class TimerFragment: Fragment(){
         }
     }
 
-    private fun setupPlayButton(viewModel: TimerViewModel){
-        button_playpause.setOnClickListener {
-            val isPaused = viewModel.isPaused.value ?: true
-            viewModel.setPauseStatus(!isPaused)
-        }
-    }
-
-    private fun setupResetButton(viewModel: TimerViewModel){
-        button_reset.setOnClickListener {
-            setResetDrawable()
-            viewModel.resetTimer()
-        }
-    }
-
-    private fun observeTimeElapsed(viewModel: TimerViewModel){
+    private fun observeTimeElapsed(viewModel: ActiveTimerViewModel){
         viewModel.timeRemaining.observe(this, Observer{ timeElapsed->
             if(timeElapsed!=null) {
                 time_text.text = DateUtils.formatElapsedTime(timeElapsed)
@@ -117,20 +87,11 @@ class TimerFragment: Fragment(){
         })
     }
 
-    private fun observePauseStatus(viewModel: TimerViewModel){
-        viewModel.isPaused.observe(this, Observer{ isPaused->
-            if(isPaused!=null){
-                adjustPlayPauseButton(isPaused)
-            }
-        })
-    }
-
-    private fun observeTimeExpired(viewModel: TimerViewModel){
+    private fun observeTimeExpired(viewModel: ActiveTimerViewModel){
         viewModel.timeIsExpired.observe(this, Observer {isExpired->
             if(isExpired!=null && isExpired){
                 fragmentInterface?.timerDone(timerTime)
-                viewModel.resetTimer()
-                setResetDrawable()
+                viewModel.resetTimerTime()
             }
         })
     }
@@ -145,73 +106,18 @@ class TimerFragment: Fragment(){
         }
     }
 
-    private fun instantiateAppObjectForViewModel() {
-        if (activity != null) {
-            application = (activity as AppCompatActivity).application
-        } else {
-            throw java.lang.RuntimeException("${this.javaClass.simpleName} needs a parent " +
-                    "activity to pass application to viewModel")
-        }
-    }
-
-    private fun throwIncorrectArgumentsException() {
-        throw RuntimeException(this@TimerFragment::class.java.simpleName + " must be created " +
-                "using the newInstance constructor with a valid Long > 0")
-    }
-
-
-
-    private fun adjustPlayPauseButton(isPaused: Boolean){
-        when(isPaused){
-            true -> setPlayDrawable()
-            else -> setPauseDrawable()
-        }
-    }
     private fun setProgress(timeElapsed: Long) {
         if (timerTime > 0 && timeElapsed <= timerTime) {
             progressBar.progress = timeElapsed.toInt() //((timeRemaining / timerTime*100).toInt())
         }
     }
-    private fun setInitialDrawableColors(){
-        setResetDrawable()
-        setPlayDrawable()
-    }
-
-
-//endregion
-
-
-//region Bottom Layer Functions
-
-    private fun setPlayDrawable(){
-        button_playpause.apply {
-            setImageResource(R.drawable.anim_play_to_pause)
-            drawable.startAsAnimatable()
-        }
-    }
-
-    private fun setPauseDrawable(){
-        button_playpause.apply {
-            setImageResource(R.drawable.anim_pause_to_play)
-            drawable.startAsAnimatable()
-        }
-    }
-
-    private fun setResetDrawable(){
-        button_reset.apply {
-            setImageResource(R.drawable.anim_reset_twirl)
-            drawable.startAsAnimatable()
-        }
-    }
-
-
 //endregion
 
 //Utilities
-    private fun themedDrawable(drawableID: Int) = VectorDrawableCompat.create(resources, drawableID, wrapper.theme)
-
-    private fun Drawable.startAsAnimatable() = (this as Animatable).start()
-
+    private fun throwIncorrectArgumentsException() {
+        throw RuntimeException(this@TimerFragment::class.java.simpleName + " must be created " +
+                "using the newInstance constructor with a valid Long > 0")
+    }
 
     interface OnTimerFragmentResult{
         fun timerDone(totalTime: Long)

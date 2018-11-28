@@ -1,29 +1,21 @@
 package com.inviscidlabs.enkel.ui.home
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
-import android.os.Build
 import android.os.Bundle
 import android.support.v4.app.NotificationCompat
 import android.support.v4.app.NotificationManagerCompat
-import android.support.v4.content.LocalBroadcastManager
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import com.inviscidlabs.enkel.EnkelApp
 import com.inviscidlabs.enkel.R
-import com.inviscidlabs.enkel.custom.HomeActivityForegroundEvent
-import com.inviscidlabs.enkel.custom.RxEventBus
+import com.inviscidlabs.enkel.app.HomeActivityForegroundEvent
+import com.inviscidlabs.enkel.app.RxEventBus
 import com.inviscidlabs.enkel.model.entity.TimerEntity
-import com.inviscidlabs.enkel.ui.custom.SelectedTimerChangedListener
-import com.inviscidlabs.enkel.ui.custom.TimerSlidePagerAdapter
+import com.inviscidlabs.enkel.ui.home.custom.SelectedTimerChangedListener
+import com.inviscidlabs.enkel.ui.home.custom.TimerSlidePagerAdapter
 import com.inviscidlabs.enkel.ui.edit_timer.ARG_TIMERID
 import com.inviscidlabs.enkel.ui.edit_timer.EditTimerActivity
 import com.inviscidlabs.enkel.ui.edit_timer.RESULT_EDIT_CANCELED
@@ -44,13 +36,14 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult{
 
     //TODO store in ViewModel or savedState
     private val mNotificationID = AtomicInteger(0)
-    private val viewModel: HomeViewModel by lazy {
-        ViewModelProviders.of(this).get(HomeViewModel::class.java) }
+    private lateinit var viewModel: HomeViewModel
 
 
 //region Lifecycle Functions
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        viewModel = ViewModelProviders.of(this, HomeViewModel.Factory(application))
+                .get(HomeViewModel::class.java)
 
         setContentView(R.layout.activity_main)
         setSupportActionBar(home_toolbar)
@@ -142,7 +135,7 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult{
     private fun startEditActivity(insertNewTimer: Boolean){
         var selectedTimerID: Int? = null
         if(!insertNewTimer){
-            selectedTimerID = viewModel.selectedTimerIndex.value
+            //TODO change to sleectedTiemrID selectedTimerID = viewModel.selectedTimerIndex.value
         }
 
         val startEditActivityIntent = Intent(this, EditTimerActivity::class.java).apply {
@@ -179,13 +172,10 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult{
 
 
 //region Utilities
-    private fun makeServiceIntentWithExtras(timer: TimerEntity): Intent{
-        val intent = Intent(applicationContext, EnkelTimerService::class.java).apply {
-            putExtra(getString(R.string.key_timer_id), timer.timerID?.toLong())
-            putExtra(getString(R.string.key_timer_time), timer.timeInMS)
-        }
-        return intent
-    }
+
+
+
+//endregion
 
 
 
