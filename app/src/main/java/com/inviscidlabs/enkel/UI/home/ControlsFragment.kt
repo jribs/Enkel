@@ -24,8 +24,6 @@ class ControlsFragment(): Fragment() {
     private val TAG = this.javaClass.simpleName
     private lateinit var viewModel: HomeViewModel
 
-
-
     override fun onAttach(context: Context?) {
         super.onAttach(context)
         if(context!=null || context is FragmentActivity){
@@ -81,6 +79,7 @@ class ControlsFragment(): Fragment() {
             setFabState(isPaused ?: return@Observer, false)
         })
     }
+//endregion
 
 //region UI
     private fun setFabState(timerIsPaused: Boolean, animateButtons: Boolean){
@@ -93,9 +92,8 @@ class ControlsFragment(): Fragment() {
         if(animateButtons) (fab_play_pause.drawable as Animatable).start()
     }
 
-    //endregion
     private fun animateResetButton() {
-        
+        (button_reset.compoundDrawables[0] as Animatable).start()
     }
 
 //endregion
