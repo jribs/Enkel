@@ -46,9 +46,7 @@
 
     <string name="key_timer_time">timerTime</string>
     <string name="key_timer_id">timerID</string>
-    <string name="notification_channel_timers">Timers</string>
-    <string name="new_timer">New Timer</string>
-    <string name="reset">Reset</string>
+
 
 
 </resources>

@@ -27,15 +27,14 @@ class HomeViewModel(private val app: Application): AndroidViewModel(app){
 
 //Private Mutables
     private val _timers = MutableLiveData<List<TimerEntity>>()
-    private val _targetedTimerIndexSelection = MutableLiveData<Int>()
     private val _currentTimerIsPaused = MutableLiveData<Boolean>()
     private val _initialTimerStatus = MutableLiveData<Boolean>()
 
 //Public Accessors
     val timers: LiveData<List<TimerEntity>> get() = _timers
-    val targetedTimerIndexSelection get() = _targetedTimerIndexSelection
     val currentTimerIsPaused get() = _currentTimerIsPaused
     val initialTimerStatus get() = _initialTimerStatus
+    var selectedTimerIndex: Int = 0
 
     init {
         loadTimers()
@@ -52,6 +51,7 @@ class HomeViewModel(private val app: Application): AndroidViewModel(app){
     //region UI
     fun timerSelectedFromViewPager(indexOfTimer: Int){
         currentTimerID = _timers.value?.get(indexOfTimer)?.timerID ?: -1
+        selectedTimerIndex = indexOfTimer
         emitNewTimerSelected(indexOfTimer)
     }
 
@@ -78,10 +78,6 @@ class HomeViewModel(private val app: Application): AndroidViewModel(app){
 
     fun resetClicked(){
         RxEventBus.post(ResetTimerEvent(currentTimerID))
-    }
-
-    fun addTimer(){
-
     }
 
     fun playPauseClicked(){
@@ -147,17 +143,12 @@ class HomeViewModel(private val app: Application): AndroidViewModel(app){
     }
 
     private fun postNewTimerIndex(savedTimerID: Int) {
-        Single.fromCallable {
-            if (isValidTimerID(savedTimerID)) {
-                val newTimerIndex = _timers.value?.indexOfFirst { timerWithID ->
-                    timerWithID.timerID == savedTimerID
-                } ?: return@fromCallable
-
-                _targetedTimerIndexSelection.postValue(newTimerIndex)
-            }
+        if (isValidTimerID(savedTimerID)) {
+            val newTimerIndex = _timers.value?.indexOfFirst { timerWithID ->
+                timerWithID.timerID == savedTimerID
+            } ?: return
+            selectedTimerIndex = newTimerIndex
         }
-                .subscribeOn(Schedulers.io())
-                .subscribe()
     }
 
     private fun isValidTimerID(savedTimerID: Int):Boolean {

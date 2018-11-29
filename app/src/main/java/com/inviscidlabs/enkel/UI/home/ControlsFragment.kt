@@ -23,13 +23,15 @@ class ControlsFragment(): Fragment() {
 
     private val TAG = this.javaClass.simpleName
     private lateinit var viewModel: HomeViewModel
+    private lateinit var eventListener: ControlsFragmentEvent
 
     override fun onAttach(context: Context?) {
         super.onAttach(context)
-        if(context!=null || context is FragmentActivity){
+        if(context!=null && context is FragmentActivity && context is ControlsFragmentEvent){
             viewModel = ViewModelProviders
                     .of((context as FragmentActivity), HomeViewModel.Factory(context.application))
                     .get(HomeViewModel::class.java)
+            eventListener = context
         } else {
             throw RuntimeException("$TAG: Parent of this fragment is not FragmentActivity. Cannot instantiate required variables")
         }
@@ -58,7 +60,7 @@ class ControlsFragment(): Fragment() {
 
     private fun setupAddButton(){
         button_add_timer.setOnClickListener {
-            viewModel.addTimer()
+            eventListener.newTimerClicked()
         }
     }
 
@@ -98,4 +100,7 @@ class ControlsFragment(): Fragment() {
 
 //endregion
 
+    interface ControlsFragmentEvent{
+        fun newTimerClicked()
+    }
 }

@@ -17,6 +17,10 @@ class TimerSlidePagerAdapter(fragmentManager: FragmentManager, private val timer
         return NoDataFragment()
     }
 
+    fun getItemOfID(timerID: Int){
+
+    }
+
     override fun getCount(): Int = timers?.size ?: 0
 
     //Internal Functions

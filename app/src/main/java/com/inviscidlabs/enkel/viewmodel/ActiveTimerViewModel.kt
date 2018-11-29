@@ -41,7 +41,7 @@ class ActiveTimerViewModel(private val timerID: Int, private val secondsToCountd
         super.onCleared()
     }
 
-    fun resetTimerTime(){
+    fun timerExpired(){
         _timeRemaining.value = secondsToCountdown
     }
 

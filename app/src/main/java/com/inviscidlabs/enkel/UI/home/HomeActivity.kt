@@ -28,9 +28,10 @@ import java.util.concurrent.atomic.AtomicInteger
 private const val CHANNEL_ID = "enkelTime"
 private const val REQ_LAUNCH_EDITTIMER = 461
 
-class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult{
+class MainActivity : AppCompatActivity(), ControlsFragment.ControlsFragmentEvent{
 
-//region Local Constants
+
+    //region Local Constants
     private val TAG = this.javaClass.simpleName
 //endregion
 
@@ -47,10 +48,7 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult{
 
         setContentView(R.layout.activity_main)
         setSupportActionBar(home_toolbar)
-        setupPagerAdapter()
-
         observeTimers()
-        observeTargetedTimerSelection()
     }
 
     override fun onStart() {
@@ -87,17 +85,11 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult{
         RxEventBus.post(HomeActivityForegroundEvent(false))
         super.onStop()
     }
-//endregion
 
-//region Implemented Functions
-    override fun timerDone(totalTime: Long) {
-        notifyTimerDone(totalTime)
+    override fun newTimerClicked() {
+        startEditActivity(true)
     }
-
-
-
-
-    //endregion
+//endregion
 
 //region 2nd Layer Functions
 
@@ -108,6 +100,7 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult{
         with(pager){
             adapter = pagerAdapter
             addOnPageChangeListener(SelectedTimerChangedListener(viewModel))
+
         }
     }
 
@@ -118,17 +111,7 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult{
             timerList ?: Log.e(TAG, "List of timers is null")
                     .also {return@Observer}
             setupPagerAdapter()
-        })
-    }
-
-    //TODO test
-    private fun observeTargetedTimerSelection(){
-        viewModel.targetedTimerIndexSelection.observe(this, Observer {index ->
-            index ?: return@Observer
-            when(index){
-                -1 -> return@Observer
-                else -> pager.currentItem = index
-            }
+            pager.setCurrentItem(viewModel.selectedTimerIndex, false)
         })
     }
 
@@ -153,31 +136,6 @@ class MainActivity : AppCompatActivity(), TimerFragment.OnTimerFragmentResult{
         viewModel.deleteTimerClicked()
     }
 
-
-    //region 3rd layer functions
-    private fun notifyTimerDone(totalTime: Long){
-            val mContext = applicationContext
-            val mBuilder = NotificationCompat.Builder(mContext, CHANNEL_ID)
-            with(mBuilder){
-                setSmallIcon(R.drawable.play)
-                setContentTitle("Enkel TimerEntity Done")
-                setContentText("${totalTime} seconds are up")
-                setStyle(NotificationCompat.BigTextStyle().bigText("${totalTime} seconds is up"))
-                priority = NotificationCompat.PRIORITY_DEFAULT
-                setAutoCancel(true)
-            }
-            NotificationManagerCompat.from(mContext).notify(mNotificationID.incrementAndGet(), mBuilder.build())
-    }
 //endregion
-
-
-//region Utilities
-
-
-
-//endregion
-
-
-
 
 }

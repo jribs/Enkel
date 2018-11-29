@@ -1,13 +1,11 @@
 package com.inviscidlabs.enkel.ui.home
 
-import android.app.Application
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Context
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.text.format.DateUtils
-import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -23,17 +21,10 @@ class TimerFragment: Fragment(){
 
     private var timerTime = 0L
     private var timerID: Int = -1
-    private var fragmentInterface: OnTimerFragmentResult? = null
     private lateinit var viewModel: ActiveTimerViewModel
 
 //region Lifecycle functions
     override fun onAttach(context: Context?) {
-        if(context!=null) {
-            instantiateFragmentEventInterface(context)
-        } else {
-            throw RuntimeException("${this::class.java.simpleName}: parent has no context")
-        }
-
         extractBundledArgumentsIfAvailable()
         viewModel = ViewModelProviders
                 .of(this, ActiveTimerViewModel.Factory(timerID, timerTime))
@@ -48,16 +39,13 @@ class TimerFragment: Fragment(){
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
+        progressBar.max = timerTime.toInt()
         observeTimeExpired((viewModel))
         observeTimeElapsed(viewModel)
 
-        progressBar.max = timerTime.toInt()
     }
 
-    override fun onDetach() {
-        super.onDetach()
-        fragmentInterface = null
-    }
+
 //endregion
 
 //region Top Layer Functions
@@ -90,21 +78,13 @@ class TimerFragment: Fragment(){
     private fun observeTimeExpired(viewModel: ActiveTimerViewModel){
         viewModel.timeIsExpired.observe(this, Observer {isExpired->
             if(isExpired!=null && isExpired){
-                fragmentInterface?.timerDone(timerTime)
-                viewModel.resetTimerTime()
+                viewModel.timerExpired()
             }
         })
     }
 //endregion
 
 //region 2nd Layer Functions
-    private fun instantiateFragmentEventInterface(context: Context) {
-        if (context is OnTimerFragmentResult) {
-            fragmentInterface = context
-        } else {
-            throw RuntimeException("${context.toString()} must implement OnTimerFragmentResult")
-        }
-    }
 
     private fun setProgress(timeElapsed: Long) {
         if (timerTime > 0 && timeElapsed <= timerTime) {
@@ -117,10 +97,6 @@ class TimerFragment: Fragment(){
     private fun throwIncorrectArgumentsException() {
         throw RuntimeException(this@TimerFragment::class.java.simpleName + " must be created " +
                 "using the newInstance constructor with a valid Long > 0")
-    }
-
-    interface OnTimerFragmentResult{
-        fun timerDone(totalTime: Long)
     }
 
     companion object {
