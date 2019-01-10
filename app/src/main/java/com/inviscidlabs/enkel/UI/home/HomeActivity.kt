@@ -6,6 +6,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.support.v4.app.NotificationCompat
 import android.support.v4.app.NotificationManagerCompat
+import android.support.v4.view.ViewPager
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.Menu
@@ -23,6 +24,7 @@ import com.inviscidlabs.enkel.ui.edit_timer.RESULT_TIMER_SAVED
 import com.inviscidlabs.enkel.viewmodel.HomeViewModel
 import com.inviscidlabs.enkel.viewmodel.service.EnkelTimerService
 import kotlinx.android.synthetic.main.activity_main.*
+import java.lang.reflect.Field
 import java.util.concurrent.atomic.AtomicInteger
 
 private const val CHANNEL_ID = "enkelTime"
@@ -100,7 +102,9 @@ class MainActivity : AppCompatActivity(), ControlsFragment.ControlsFragmentEvent
         with(pager){
             adapter = pagerAdapter
             addOnPageChangeListener(SelectedTimerChangedListener(viewModel))
-
+            val flingDistance: Field = ViewPager::class.java.getDeclaredField("mFlingDistance")
+            flingDistance.isAccessible = true
+            flingDistance.set(this, 0)
         }
     }
 
@@ -118,7 +122,7 @@ class MainActivity : AppCompatActivity(), ControlsFragment.ControlsFragmentEvent
     private fun startEditActivity(insertNewTimer: Boolean){
         var selectedTimerID: Int? = null
         if(!insertNewTimer){
-            //TODO change to sleectedTiemrID selectedTimerID = viewModel.selectedTimerIndex.value
+            //TODO change to selectedTimerID selectedTimerID = viewModel.selectedTimerIndex.value
         }
 
         val startEditActivityIntent = Intent(this, EditTimerActivity::class.java).apply {

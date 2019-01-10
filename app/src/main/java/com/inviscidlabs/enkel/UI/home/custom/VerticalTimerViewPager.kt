@@ -3,8 +3,10 @@ package com.inviscidlabs.enkel.ui.home.custom
 import android.content.Context
 import android.support.v4.view.ViewPager
 import android.util.AttributeSet
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
+import java.lang.reflect.Field
 
 //Reference is : https://stackoverflow.com/questions/13477820/android-vertical-viewpager
 
@@ -12,7 +14,12 @@ import android.view.View
 class VerticalTimerViewPager(context: Context, attributeSet: AttributeSet): ViewPager(context, attributeSet){
 
     init {
+        val flingDistance: Field = ViewPager::class.java.getDeclaredField("mFlingDistance")
+        flingDistance.isAccessible = true
+        flingDistance.set(this, 0)
         setPageTransformer(true, VerticalPageTransformer())
+
+        Log.e("pager", flingDistance.get(this).toString())
     }
 
     override fun onInterceptTouchEvent(ev: MotionEvent?): Boolean {
@@ -34,6 +41,16 @@ class VerticalTimerViewPager(context: Context, attributeSet: AttributeSet): View
         }
         return motionEvent
     }
+
+//    override fun onPageScrolled(position: Int, offset: Float, offsetPixels: Int) {
+//        if(offset<mLastPositionOffset && offset<0.8){
+//            currentItem = position
+//        } else if(offset > mLastPositionOffset && offset>0.2){
+//            currentItem = position+1
+//        }
+//        mLastPositionOffset = offset
+//        super.onPageScrolled(position, offset, offsetPixels)
+//    }
 
     private class VerticalPageTransformer: ViewPager.PageTransformer{
 
@@ -60,6 +77,8 @@ class VerticalTimerViewPager(context: Context, attributeSet: AttributeSet): View
         private fun makePageInvisible(page: View) {
             page.alpha = 0f
         }
+
+
 
         //endregion
 

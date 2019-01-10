@@ -17,6 +17,11 @@ import com.inviscidlabs.enkel.R
 import com.inviscidlabs.enkel.app.*
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
+import com.inviscidlabs.enkel.R.drawable.play
+import android.media.RingtoneManager
+import android.media.Ringtone
+
+
 
 //https://developer.android.com/guide/topics/media-apps/audio-app/building-a-mediabrowserservice#mediastyle-notifications
 //https://developer.android.com/guide/components/services#Foreground
@@ -196,6 +201,7 @@ class EnkelTimerService: Service(){
                 id = timerID){
             override fun onFinish() {
                 //TODO Notification that we are done
+                playNotificationSound()
                 RxEventBus.post(TimerExpiredEvent(timerIDInt))
                 notifyTimerDone(timerTime)
                 activeTimers.remove(this)
@@ -292,6 +298,16 @@ class EnkelTimerService: Service(){
             (numOtherTimers>1)  -> "+ ${numOtherTimers} ${getString(R.string.notif_otherTimers)}"
             (numOtherTimers==1) -> "+ ${numOtherTimers} ${getString(R.string.notif_otherTimer)}"
             else                -> ""
+        }
+    }
+
+    private fun playNotificationSound(){
+        try {
+            val notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+            val r = RingtoneManager.getRingtone(applicationContext, notification)
+            r.play()
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
